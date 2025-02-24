@@ -22,7 +22,7 @@ After installation, use the following command to run GoAdBlock:
 ./GoAdBlock
 ```
 ## License
-This project is licensed under the MIT License. See the [LICENSE](https://github.com/vivek-pk/GoAdBlock/new/LICENSE)  file for details.
+This project is licensed under the MIT License. See the [LICENSE](https://github.com/vivek-pk/GoAdBlock/tree/development?tab=License-1-ov-file)  file for details.
 
 ## Acknowledgments
 Special thanks to everyone who contributed to this project.
