@@ -1,6 +1,8 @@
 package dns
 
 import (
+	"context"
+	"fmt"
 	"log"
 	"net"
 	"sync"
@@ -17,6 +19,7 @@ type Server struct {
 	upstreamDNS     []string
 	currentUpstream int
 	metrics         *Metrics
+	shutdown        chan struct{}
 }
 
 type DNSCache struct {
@@ -48,7 +51,8 @@ func NewServer(blocker *blocker.AdBlocker) *Server {
 			"1.1.1.1:53", // Cloudflare
 			"9.9.9.9:53", // Quad9
 		},
-		metrics: &Metrics{},
+		metrics:  &Metrics{},
+		shutdown: make(chan struct{}),
 	}
 }
 
@@ -135,7 +139,7 @@ func (s *Server) updateCache(name string, qtype uint16, answer []dns.RR) {
 }
 
 func getCacheKey(name string, qtype uint16) string {
-	return name + ":" + string(qtype)
+	return fmt.Sprintf("%s:%d", name, qtype)
 }
 
 // Metrics methods
@@ -170,7 +174,30 @@ func (s *Server) GetMetrics() *Metrics {
 func (s *Server) Start(addr string) error {
 	s.server = &dns.Server{Addr: addr, Net: "udp"}
 	dns.HandleFunc(".", s.handleRequest)
-	return s.server.ListenAndServe()
+
+	errChan := make(chan error, 1)
+	go func() {
+		errChan <- s.server.ListenAndServe()
+	}()
+
+	// Wait for either shutdown signal or error
+	select {
+	case <-s.shutdown:
+		return nil
+	case err := <-errChan:
+		return err
+	}
+}
+
+func (s *Server) Shutdown(ctx context.Context) error {
+	// Signal shutdown
+	close(s.shutdown)
+
+	// Shutdown the DNS server
+	if s.server != nil {
+		return s.server.Shutdown()
+	}
+	return nil
 }
 
 func logQuery(domain string, isBlocked bool, clientIP net.IP) {
