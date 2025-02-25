@@ -168,19 +168,36 @@
             try {
               // Fetch metrics
               const metricsResponse = await fetch('/api/v1/metrics');
+              if (!metricsResponse.ok) {
+                throw new Error('Metrics fetch failed');
+              }
               const metricsData = await metricsResponse.json();
-              this.metrics = metricsData;
+              console.log('Metrics received:', metricsData); // Debug log
+
+              // Update metrics with proper fallbacks
+              this.metrics = {
+                totalQueries: metricsData.totalQueries || 0,
+                blockedQueries: metricsData.blockedQueries || 0,
+                cacheHits: metricsData.cacheHits || 0,
+                cacheMisses: metricsData.cacheMisses || 0,
+              };
 
               // Fetch recent queries
               const queriesResponse = await fetch('/api/v1/queries');
+              if (!queriesResponse.ok) {
+                throw new Error('Queries fetch failed');
+              }
               const queriesData = await queriesResponse.json();
-              this.recentQueries = queriesData.queries.map((q) => ({
+              this.recentQueries = (queriesData.queries || []).map((q) => ({
                 ...q,
                 time: new Date(q.timestamp).toLocaleTimeString(),
               }));
 
               // Update status
               const statusResponse = await fetch('/api/v1/status');
+              if (!statusResponse.ok) {
+                throw new Error('Status fetch failed');
+              }
               const statusData = await statusResponse.json();
               this.status = statusData.status;
             } catch (error) {

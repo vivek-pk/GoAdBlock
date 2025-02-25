@@ -158,24 +158,28 @@ func (m *Metrics) incrementTotal() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.TotalQueries++
+	log.Printf("Total queries: %d", m.TotalQueries) // Debug log
 }
 
 func (m *Metrics) incrementBlocked() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.BlockedQueries++
+	log.Printf("Blocked queries: %d", m.BlockedQueries) // Debug log
 }
 
 func (m *Metrics) incrementCacheHit() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.CacheHits++
+	log.Printf("Cache hits: %d", m.CacheHits) // Debug log
 }
 
 func (m *Metrics) incrementCacheMiss() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.CacheMisses++
+	log.Printf("Cache misses: %d", m.CacheMisses) // Debug log
 }
 
 func (s *Server) GetMetrics() *Metrics {

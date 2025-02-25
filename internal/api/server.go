@@ -112,8 +112,18 @@ func (s *APIServer) handleDashboard(w http.ResponseWriter, r *http.Request) {
 
 func (s *APIServer) handleMetrics(w http.ResponseWriter, r *http.Request) {
 	metrics := s.dnsServer.GetMetrics()
+	response := map[string]interface{}{
+		"totalQueries":   metrics.TotalQueries,
+		"blockedQueries": metrics.BlockedQueries,
+		"cacheHits":      metrics.CacheHits,
+		"cacheMisses":    metrics.CacheMisses,
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(metrics)
+	if err := json.NewEncoder(w).Encode(response); err != nil {
+		http.Error(w, "Failed to encode metrics", http.StatusInternalServerError)
+		return
+	}
 }
 
 func (s *APIServer) handleStatus(w http.ResponseWriter, r *http.Request) {
