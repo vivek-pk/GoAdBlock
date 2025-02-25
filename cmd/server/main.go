@@ -29,8 +29,18 @@ func main() {
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
-	// Start DNS server
-	dnsServer := dns.NewServer(adblocker)
+	// Create API server first
+	apiServer, err := api.NewAPIServer(nil, 8080)
+	if err != nil {
+		log.Fatalf("Failed to create API server: %v", err)
+	}
+
+	// Create DNS server with API notifier
+	dnsServer := dns.NewServer(adblocker, apiServer)
+
+	// Update API server's DNS server reference
+	apiServer.SetDNSServer(dnsServer)
+
 	dnsErrChan := make(chan error, 1)
 	go func() {
 		log.Println("Starting GoAdBlock DNS server on :53")
@@ -39,8 +49,6 @@ func main() {
 		}
 	}()
 
-	// Start API server
-	apiServer := api.NewAPIServer(dnsServer, 8080)
 	apiErrChan := make(chan error, 1)
 	go func() {
 		log.Println("Starting API server on :8080")
