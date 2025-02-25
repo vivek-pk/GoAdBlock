@@ -11,6 +11,21 @@ import (
 	"github.com/vivek-pk/goadblock/internal/blocker"
 )
 
+// Add after the existing imports
+type mockNotifier struct {
+	queries []struct {
+		domain  string
+		blocked bool
+	}
+}
+
+func (m *mockNotifier) AddQuery(domain string, blocked bool) {
+	m.queries = append(m.queries, struct {
+		domain  string
+		blocked bool
+	}{domain, blocked})
+}
+
 // findAvailablePort finds an available UDP port
 func findAvailablePort() (int, error) {
 	addr, err := net.ResolveUDPAddr("udp", "127.0.0.1:0")
@@ -27,6 +42,7 @@ func findAvailablePort() (int, error) {
 	return l.LocalAddr().(*net.UDPAddr).Port, nil
 }
 
+// Update setupTestServer function
 func setupTestServer(t *testing.T) (*Server, string, func()) {
 	port, err := findAvailablePort()
 	if err != nil {
@@ -36,7 +52,11 @@ func setupTestServer(t *testing.T) (*Server, string, func()) {
 	adblocker := blocker.New()
 	_ = adblocker.LoadFromURL("https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts")
 
-	server := NewServer(adblocker)
+	// Create mock notifier
+	notifier := &mockNotifier{}
+
+	// Pass notifier to NewServer
+	server := NewServer(adblocker, notifier)
 	addr := fmt.Sprintf(":%d", port)
 	errChan := make(chan error, 1)
 
@@ -175,5 +195,70 @@ func TestCaching(t *testing.T) {
 	}
 	if metrics.CacheMisses != initialMisses+1 {
 		t.Errorf("Expected %d cache misses, got %d", initialMisses+1, metrics.CacheMisses)
+	}
+}
+
+// Add this new test function
+func TestQueryNotifications(t *testing.T) {
+	notifier := &mockNotifier{}
+	adblocker := blocker.New()
+	_ = adblocker.LoadFromURL("https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts")
+
+	server := NewServer(adblocker, notifier)
+	port, err := findAvailablePort()
+	if err != nil {
+		t.Fatalf("Failed to find available port: %v", err)
+	}
+
+	go server.Start(fmt.Sprintf(":%d", port))
+	defer func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		server.Shutdown(ctx)
+	}()
+
+	// Wait for server to start
+	time.Sleep(time.Second)
+
+	// Make some test queries
+	c := &dns.Client{Timeout: 2 * time.Second}
+	addr := fmt.Sprintf("127.0.0.1:%d", port)
+
+	queries := []struct {
+		domain      string
+		shouldBlock bool
+	}{
+		{"google.com.", false},
+		{"doubleclick.net.", true},
+		{"example.com.", false},
+	}
+
+	for _, q := range queries {
+		m := new(dns.Msg)
+		m.SetQuestion(q.domain, dns.TypeA)
+		_, _, err := c.Exchange(m, addr)
+		if err != nil {
+			t.Fatalf("Query failed for %s: %v", q.domain, err)
+		}
+	}
+
+	// Give some time for notifications to be processed
+	time.Sleep(100 * time.Millisecond)
+
+	// Verify notifications
+	if len(notifier.queries) != len(queries) {
+		t.Errorf("Expected %d notifications, got %d", len(queries), len(notifier.queries))
+	}
+
+	for i, q := range queries {
+		if i >= len(notifier.queries) {
+			break
+		}
+		if notifier.queries[i].domain != q.domain {
+			t.Errorf("Query %d: expected domain %s, got %s", i, q.domain, notifier.queries[i].domain)
+		}
+		if notifier.queries[i].blocked != q.shouldBlock {
+			t.Errorf("Query %d: expected blocked=%v, got blocked=%v", i, q.shouldBlock, notifier.queries[i].blocked)
+		}
 	}
 }

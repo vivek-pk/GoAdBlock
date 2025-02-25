@@ -20,6 +20,7 @@ type Server struct {
 	currentUpstream int
 	metrics         *Metrics
 	shutdown        chan struct{}
+	apiNotifier     APINotifier
 }
 
 type DNSCache struct {
@@ -40,7 +41,11 @@ type Metrics struct {
 	mu             sync.RWMutex
 }
 
-func NewServer(blocker *blocker.AdBlocker) *Server {
+type APINotifier interface {
+	AddQuery(domain string, blocked bool)
+}
+
+func NewServer(blocker *blocker.AdBlocker, apiNotifier APINotifier) *Server {
 	return &Server{
 		blocker: blocker,
 		cache: &DNSCache{
@@ -51,8 +56,9 @@ func NewServer(blocker *blocker.AdBlocker) *Server {
 			"1.1.1.1:53", // Cloudflare
 			"9.9.9.9:53", // Quad9
 		},
-		metrics:  &Metrics{},
-		shutdown: make(chan struct{}),
+		metrics:     &Metrics{},
+		shutdown:    make(chan struct{}),
+		apiNotifier: apiNotifier,
 	}
 }
 
@@ -71,6 +77,11 @@ func (s *Server) handleRequest(w dns.ResponseWriter, r *dns.Msg) {
 				clientIP, _, _ := net.SplitHostPort(w.RemoteAddr().String())
 				isBlocked := s.blocker.IsBlocked(q.Name)
 				logQuery(q.Name, isBlocked, net.ParseIP(clientIP))
+
+				// Notify API server of query
+				if s.apiNotifier != nil {
+					s.apiNotifier.AddQuery(q.Name, isBlocked)
+				}
 
 				if isBlocked {
 					s.metrics.incrementBlocked()
@@ -147,24 +158,28 @@ func (m *Metrics) incrementTotal() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.TotalQueries++
+	log.Printf("Total queries: %d", m.TotalQueries) // Debug log
 }
 
 func (m *Metrics) incrementBlocked() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.BlockedQueries++
+	log.Printf("Blocked queries: %d", m.BlockedQueries) // Debug log
 }
 
 func (m *Metrics) incrementCacheHit() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.CacheHits++
+	log.Printf("Cache hits: %d", m.CacheHits) // Debug log
 }
 
 func (m *Metrics) incrementCacheMiss() {
 	m.mu.Lock()
 	defer m.mu.Unlock()
 	m.CacheMisses++
+	log.Printf("Cache misses: %d", m.CacheMisses) // Debug log
 }
 
 func (s *Server) GetMetrics() *Metrics {
