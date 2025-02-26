@@ -14,16 +14,18 @@ import (
 // Add after the existing imports
 type mockNotifier struct {
 	queries []struct {
-		domain  string
-		blocked bool
+		domain   string
+		clientIP string
+		blocked  bool
 	}
 }
 
-func (m *mockNotifier) AddQuery(domain string, blocked bool) {
+func (m *mockNotifier) AddQuery(domain string, clientIP string, blocked bool) {
 	m.queries = append(m.queries, struct {
-		domain  string
-		blocked bool
-	}{domain, blocked})
+		domain   string
+		clientIP string
+		blocked  bool
+	}{domain, clientIP, blocked})
 }
 
 // findAvailablePort finds an available UDP port
@@ -256,6 +258,9 @@ func TestQueryNotifications(t *testing.T) {
 		}
 		if notifier.queries[i].domain != q.domain {
 			t.Errorf("Query %d: expected domain %s, got %s", i, q.domain, notifier.queries[i].domain)
+		}
+		if notifier.queries[i].clientIP != "127.0.0.1" {
+			t.Errorf("Query %d: expected client IP 127.0.0.1, got %s", i, notifier.queries[i].clientIP)
 		}
 		if notifier.queries[i].blocked != q.shouldBlock {
 			t.Errorf("Query %d: expected blocked=%v, got blocked=%v", i, q.shouldBlock, notifier.queries[i].blocked)

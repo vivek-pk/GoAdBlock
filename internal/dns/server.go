@@ -42,7 +42,7 @@ type Metrics struct {
 }
 
 type APINotifier interface {
-	AddQuery(domain string, blocked bool)
+	AddQuery(domain string, clientIP string, blocked bool)
 }
 
 func NewServer(blocker *blocker.AdBlocker, apiNotifier APINotifier) *Server {
@@ -80,7 +80,7 @@ func (s *Server) handleRequest(w dns.ResponseWriter, r *dns.Msg) {
 
 				// Notify API server of query
 				if s.apiNotifier != nil {
-					s.apiNotifier.AddQuery(q.Name, isBlocked)
+					s.apiNotifier.AddQuery(q.Name, clientIP, isBlocked)
 				}
 
 				if isBlocked {
