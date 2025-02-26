@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"html/template"
 	"net/http"
+	"sort"
 	"sync"
 	"time"
 
@@ -24,6 +25,18 @@ type Query struct {
 	Timestamp time.Time `json:"timestamp"`
 }
 
+type HourlyStats struct {
+	Requests int
+	Blocks   int
+}
+
+type ClientStats struct {
+	IP             string    `json:"ip"`
+	TotalQueries   int64     `json:"totalQueries"`
+	BlockedQueries int64     `json:"blockedQueries"`
+	LastSeen       time.Time `json:"lastSeen"`
+}
+
 type APIServer struct {
 	dnsServer     *dns.Server
 	port          int
@@ -32,6 +45,11 @@ type APIServer struct {
 	queriesLock   sync.RWMutex
 	templates     *template.Template
 	server        *http.Server
+	hourlyStats   [24]HourlyStats
+	hourlyStatsMu sync.RWMutex
+	lastHourIndex int
+	clientStats   map[string]*ClientStats
+	clientStatsMu sync.RWMutex
 }
 
 func NewAPIServer(dnsServer *dns.Server, port int) (*APIServer, error) {
@@ -46,11 +64,12 @@ func NewAPIServer(dnsServer *dns.Server, port int) (*APIServer, error) {
 		startTime:     time.Now(),
 		recentQueries: make([]Query, 0, 100),
 		templates:     tmpl,
+		clientStats:   make(map[string]*ClientStats),
 	}, nil
 }
 
 // Add method to track queries
-func (s *APIServer) AddQuery(domain string, blocked bool) {
+func (s *APIServer) AddQuery(domain string, clientIP string, blocked bool) {
 	s.queriesLock.Lock()
 	defer s.queriesLock.Unlock()
 
@@ -68,6 +87,45 @@ func (s *APIServer) AddQuery(domain string, blocked bool) {
 	if len(s.recentQueries) > 100 {
 		s.recentQueries = s.recentQueries[:100]
 	}
+
+	s.trackQuery(blocked)
+	s.trackClientQuery(clientIP, blocked)
+}
+
+func (s *APIServer) trackQuery(blocked bool) {
+	s.hourlyStatsMu.Lock()
+	defer s.hourlyStatsMu.Unlock()
+
+	currentHour := time.Now().Hour()
+	if currentHour != s.lastHourIndex {
+		// Roll over to new hour
+		s.hourlyStats[currentHour] = HourlyStats{}
+		s.lastHourIndex = currentHour
+	}
+
+	s.hourlyStats[currentHour].Requests++
+	if blocked {
+		s.hourlyStats[currentHour].Blocks++
+	}
+}
+
+func (s *APIServer) trackClientQuery(ip string, blocked bool) {
+	s.clientStatsMu.Lock()
+	defer s.clientStatsMu.Unlock()
+
+	stats, exists := s.clientStats[ip]
+	if !exists {
+		stats = &ClientStats{
+			IP: ip,
+		}
+		s.clientStats[ip] = stats
+	}
+
+	stats.TotalQueries++
+	if blocked {
+		stats.BlockedQueries++
+	}
+	stats.LastSeen = time.Now()
 }
 
 // Add new handler for queries
@@ -81,6 +139,53 @@ func (s *APIServer) handleQueries(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+func (s *APIServer) handleHourlyStats(w http.ResponseWriter, r *http.Request) {
+	s.hourlyStatsMu.RLock()
+	defer s.hourlyStatsMu.RUnlock()
+
+	currentHour := time.Now().Hour()
+	hours := make([]string, 24)
+	requests := make([]int, 24)
+	blocks := make([]int, 24)
+
+	for i := 0; i < 24; i++ {
+		hour := (currentHour - 23 + i + 24) % 24
+		hours[i] = fmt.Sprintf("%02d:00", hour)
+		stats := s.hourlyStats[hour]
+		requests[i] = stats.Requests
+		blocks[i] = stats.Blocks
+	}
+
+	response := map[string]interface{}{
+		"hours":    hours,
+		"requests": requests,
+		"blocks":   blocks,
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(response)
+}
+
+func (s *APIServer) handleClients(w http.ResponseWriter, r *http.Request) {
+	s.clientStatsMu.RLock()
+	defer s.clientStatsMu.RUnlock()
+
+	clients := make([]*ClientStats, 0, len(s.clientStats))
+	for _, stats := range s.clientStats {
+		clients = append(clients, stats)
+	}
+
+	// Sort by last seen, most recent first
+	sort.Slice(clients, func(i, j int) bool {
+		return clients[i].LastSeen.After(clients[j].LastSeen)
+	})
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]interface{}{
+		"clients": clients,
+	})
+}
+
 func (s *APIServer) Start() error {
 	mux := http.NewServeMux()
 
@@ -91,6 +196,8 @@ func (s *APIServer) Start() error {
 	mux.HandleFunc("/api/v1/metrics", s.handleMetrics)
 	mux.HandleFunc("/api/v1/status", s.handleStatus)
 	mux.HandleFunc("/api/v1/queries", s.handleQueries)
+	mux.HandleFunc("/api/v1/stats/hourly", s.handleHourlyStats)
+	mux.HandleFunc("/api/v1/clients", s.handleClients)
 
 	s.server = &http.Server{
 		Addr:         fmt.Sprintf(":%d", s.port),

@@ -9,6 +9,7 @@
       defer
       src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"
     ></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   </head>
   <body class="bg-gray-100" x-data="dashboard()">
     <div class="min-h-screen">
@@ -83,6 +84,85 @@
           </div>
         </div>
 
+        <div class="mt-8 bg-white overflow-hidden shadow rounded-lg">
+          <div class="px-4 py-5 sm:p-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+              24 Hour Statistics
+            </h3>
+            <div style="height: 300px">
+              <canvas id="statsChart"></canvas>
+            </div>
+          </div>
+        </div>
+
+        <div class="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
+          <div class="px-4 py-5 sm:px-6">
+            <h3 class="text-lg leading-6 font-medium text-gray-900">
+              Active Clients
+            </h3>
+          </div>
+          <div class="flex flex-col">
+            <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
+              <div
+                class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8"
+              >
+                <div
+                  class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg"
+                >
+                  <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                      <tr>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          IP Address
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          Total Queries
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          Blocked Queries
+                        </th>
+                        <th
+                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                        >
+                          Last Seen
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-200">
+                      <template x-for="client in clientStats" :key="client.ip">
+                        <tr>
+                          <td
+                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                            x-text="client.ip"
+                          ></td>
+                          <td
+                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                            x-text="client.totalQueries"
+                          ></td>
+                          <td
+                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
+                            x-text="client.blockedQueries"
+                          ></td>
+                          <td
+                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
+                            x-text="client.lastSeen"
+                          ></td>
+                        </tr>
+                      </template>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
         <!-- Recent queries table -->
         <div class="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
           <div class="px-4 py-5 sm:px-6">
@@ -150,6 +230,8 @@
 
     <script>
       function dashboard() {
+        let chart = null;
+
         return {
           status: 'running',
           metrics: {
@@ -159,10 +241,71 @@
             cacheMisses: 0,
           },
           recentQueries: [],
+          hourlyStats: {
+            labels: [],
+            requests: [],
+            blocks: [],
+          },
+          clientStats: [],
           init() {
+            this.initChart();
             this.fetchData();
             // Update every second
             setInterval(() => this.fetchData(), 1000);
+          },
+          initChart() {
+            const ctx = document.getElementById('statsChart').getContext('2d');
+            chart = new Chart(ctx, {
+              type: 'line',
+              data: {
+                labels: [],
+                datasets: [
+                  {
+                    label: 'Total Requests',
+                    borderColor: '#60A5FA',
+                    backgroundColor: '#60A5FA20',
+                    data: [],
+                    fill: true,
+                    tension: 0.4,
+                  },
+                  {
+                    label: 'Blocked Requests',
+                    borderColor: '#EF4444',
+                    backgroundColor: '#EF444420',
+                    data: [],
+                    fill: true,
+                    tension: 0.4,
+                  },
+                ],
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                  duration: 0, // Disable animation to prevent height issues
+                },
+                plugins: {
+                  legend: {
+                    position: 'top',
+                  },
+                },
+                scales: {
+                  y: {
+                    beginAtZero: true,
+                    ticks: {
+                      precision: 0,
+                    },
+                    suggestedMax: 100, // Set a fixed max value
+                    grace: '5%', // Add some padding
+                  },
+                  x: {
+                    grid: {
+                      display: false,
+                    },
+                  },
+                },
+              },
+            });
           },
           async fetchData() {
             try {
@@ -200,6 +343,32 @@
               }
               const statusData = await statusResponse.json();
               this.status = statusData.status;
+
+              // Fetch hourly stats
+              const statsResponse = await fetch('/api/v1/stats/hourly');
+              if (!statsResponse.ok) {
+                throw new Error('Hourly stats fetch failed');
+              }
+              const statsData = await statsResponse.json();
+
+              // Fetch client stats
+              const clientStatsResponse = await fetch('/api/v1/clients');
+              if (!clientStatsResponse.ok) {
+                throw new Error('Client stats fetch failed');
+              }
+              const clientStatsData = await clientStatsResponse.json();
+              this.clientStats = clientStatsData.clients.map((client) => ({
+                ...client,
+                lastSeen: new Date(client.lastSeen).toLocaleString(),
+              }));
+
+              // Update chart
+              if (chart) {
+                chart.data.labels = statsData.hours;
+                chart.data.datasets[0].data = statsData.requests;
+                chart.data.datasets[1].data = statsData.blocks;
+                chart.update();
+              }
             } catch (error) {
               console.error('Failed to fetch data:', error);
               this.status = 'stopped';
