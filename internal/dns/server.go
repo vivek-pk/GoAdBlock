@@ -12,15 +12,27 @@ import (
 	"github.com/vivek-pk/goadblock/internal/blocker"
 )
 
+// Server represents a DNS server
 type Server struct {
-	blocker         *blocker.AdBlocker
+	blocker         *blocker.Blocker
+	notifier        BlockNotifier
 	server          *dns.Server
 	cache           *DNSCache
-	upstreamDNS     []string
+	upstreamAddrs   []string
 	currentUpstream int
 	metrics         *Metrics
 	shutdown        chan struct{}
 	apiNotifier     APINotifier
+	Ready           chan struct{}
+	blockingMode    string
+	blockingIP      net.IP
+}
+
+type ServerConfig struct {
+	UpstreamServers []string
+	BlockingMode    string
+	BlockingIP      string
+	CacheSize       int
 }
 
 type DNSCache struct {
@@ -45,21 +57,56 @@ type APINotifier interface {
 	AddQuery(domain string, clientIP string, blocked bool)
 }
 
-func NewServer(blocker *blocker.AdBlocker, apiNotifier APINotifier) *Server {
-	return &Server{
-		blocker: blocker,
-		cache: &DNSCache{
-			entries: make(map[string]*CacheEntry),
-		},
-		upstreamDNS: []string{
+// BlockNotifier is an interface for components that need to be notified of blocked domains
+type BlockNotifier interface {
+	OnDomainBlocked(domain string, clientIP string, reason string)
+}
+
+// Update NewServer function to accept config
+func NewServer(blocker *blocker.Blocker, apiNotifier APINotifier, config ServerConfig) *Server {
+	// Create default config if needed
+	if len(config.UpstreamServers) == 0 {
+		config.UpstreamServers = []string{
 			"8.8.8.8:53", // Google
 			"1.1.1.1:53", // Cloudflare
-			"9.9.9.9:53", // Quad9
-		},
-		metrics:     &Metrics{},
-		shutdown:    make(chan struct{}),
-		apiNotifier: apiNotifier,
+		}
 	}
+	if config.BlockingMode == "" {
+		config.BlockingMode = "zero_ip"
+	}
+	if config.BlockingIP == "" {
+		config.BlockingIP = "0.0.0.0"
+	}
+	if config.CacheSize <= 0 {
+		config.CacheSize = 10000
+	}
+
+	return &Server{
+		blocker:     blocker,
+		apiNotifier: apiNotifier,
+		cache: &DNSCache{
+			entries: make(map[string]*CacheEntry, config.CacheSize),
+		},
+		upstreamAddrs: config.UpstreamServers,
+		metrics:       &Metrics{},
+		shutdown:      make(chan struct{}),
+		Ready:         make(chan struct{}),
+		blockingMode:  config.BlockingMode,
+		blockingIP:    net.ParseIP(config.BlockingIP),
+	}
+}
+
+// Backward compatibility wrapper
+func NewServerSimple(blocker *blocker.Blocker, apiNotifier APINotifier) *Server {
+	return NewServer(blocker, apiNotifier, ServerConfig{
+		UpstreamServers: []string{
+			"8.8.8.8:53", // Google
+			"1.1.1.1:53", // Cloudflare
+		},
+		BlockingMode: "zero_ip",
+		BlockingIP:   "0.0.0.0",
+		CacheSize:    10000,
+	})
 }
 
 func (s *Server) handleRequest(w dns.ResponseWriter, r *dns.Msg) {
@@ -75,8 +122,8 @@ func (s *Server) handleRequest(w dns.ResponseWriter, r *dns.Msg) {
 			switch q.Qtype {
 			case dns.TypeA, dns.TypeAAAA:
 				clientIP, _, _ := net.SplitHostPort(w.RemoteAddr().String())
-				isBlocked := s.blocker.IsBlocked(q.Name)
-				logQuery(q.Name, isBlocked, net.ParseIP(clientIP))
+				isBlocked, reason := s.blocker.IsBlocked(q.Name)
+				log.Printf("DNS query: %s, blocked: %v, reason: %s", q.Name, isBlocked, reason)
 
 				// Notify API server of query
 				if s.apiNotifier != nil {
@@ -84,18 +131,25 @@ func (s *Server) handleRequest(w dns.ResponseWriter, r *dns.Msg) {
 				}
 
 				if isBlocked {
+					// Notify block listeners
+					if s.notifier != nil {
+						s.notifier.OnDomainBlocked(q.Name, clientIP, reason)
+					}
+
 					s.metrics.incrementBlocked()
 					if q.Qtype == dns.TypeA {
 						m.Answer = append(m.Answer, &dns.A{
 							Hdr: dns.RR_Header{Name: q.Name, Rrtype: dns.TypeA, Class: dns.ClassINET, Ttl: 60},
-							A:   net.IPv4(0, 0, 0, 0),
+							A:   net.IPv4(0, 0, 0, 0), // Block by returning 0.0.0.0
 						})
 					} else {
 						m.Answer = append(m.Answer, &dns.AAAA{
 							Hdr:  dns.RR_Header{Name: q.Name, Rrtype: dns.TypeAAAA, Class: dns.ClassINET, Ttl: 60},
-							AAAA: net.IPv6zero,
+							AAAA: net.IPv6zero, // Block IPv6 too
 						})
 					}
+
+					log.Printf("Blocked domain %s, returning null IP", q.Name)
 				} else {
 					// Check cache first
 					if answer := s.checkCache(q.Name, q.Qtype); answer != nil {
@@ -119,8 +173,8 @@ func (s *Server) handleRequest(w dns.ResponseWriter, r *dns.Msg) {
 
 func (s *Server) queryUpstream(r *dns.Msg) (*dns.Msg, error) {
 	// Round-robin through upstream servers
-	s.currentUpstream = (s.currentUpstream + 1) % len(s.upstreamDNS)
-	return dns.Exchange(r, s.upstreamDNS[s.currentUpstream])
+	s.currentUpstream = (s.currentUpstream + 1) % len(s.upstreamAddrs)
+	return dns.Exchange(r, s.upstreamAddrs[s.currentUpstream])
 }
 
 func (s *Server) checkCache(name string, qtype uint16) []dns.RR {
@@ -195,6 +249,9 @@ func (s *Server) Start(addr string) error {
 		errChan <- s.server.ListenAndServe()
 	}()
 
+	// Signal ready after successful bind
+	close(s.Ready)
+
 	// Wait for either shutdown signal or error
 	select {
 	case <-s.shutdown:
@@ -221,4 +278,9 @@ func logQuery(domain string, isBlocked bool, clientIP net.IP) {
 		status = "blocked"
 	}
 	log.Printf("DNS Query from %s: %s - %s", clientIP, domain, status)
+}
+
+// Add this method to your DNS Server struct
+func (s *Server) GetBlocker() *blocker.Blocker {
+	return s.blocker
 }

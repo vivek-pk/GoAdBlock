@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/gorilla/mux"
 	"github.com/vivek-pk/goadblock/internal/dns"
 )
 
@@ -45,6 +46,7 @@ type APIServer struct {
 	queriesLock   sync.RWMutex
 	templates     *template.Template
 	server        *http.Server
+	router        *mux.Router
 	hourlyStats   [24]HourlyStats
 	hourlyStatsMu sync.RWMutex
 	lastHourIndex int
@@ -58,14 +60,20 @@ func NewAPIServer(dnsServer *dns.Server, port int) (*APIServer, error) {
 		return nil, err
 	}
 
-	return &APIServer{
+	server := &APIServer{
 		dnsServer:     dnsServer,
 		port:          port,
 		startTime:     time.Now(),
 		recentQueries: make([]Query, 0, 100),
 		templates:     tmpl,
+		router:        mux.NewRouter(), // Initialize the router
 		clientStats:   make(map[string]*ClientStats),
-	}, nil
+	}
+
+	// Call setupRoutes to register all routes
+	server.setupRoutes()
+
+	return server, nil
 }
 
 // Add method to track queries
@@ -187,26 +195,44 @@ func (s *APIServer) handleClients(w http.ResponseWriter, r *http.Request) {
 }
 
 func (s *APIServer) Start() error {
-	mux := http.NewServeMux()
-
-	// Serve dashboard
-	mux.HandleFunc("/", s.handleDashboard)
-
-	// API endpoints
-	mux.HandleFunc("/api/v1/metrics", s.handleMetrics)
-	mux.HandleFunc("/api/v1/status", s.handleStatus)
-	mux.HandleFunc("/api/v1/queries", s.handleQueries)
-	mux.HandleFunc("/api/v1/stats/hourly", s.handleHourlyStats)
-	mux.HandleFunc("/api/v1/clients", s.handleClients)
-
 	s.server = &http.Server{
 		Addr:         fmt.Sprintf(":%d", s.port),
-		Handler:      mux,
+		Handler:      s.router, // Use the router
 		ReadTimeout:  10 * time.Second,
 		WriteTimeout: 10 * time.Second,
 	}
 
 	return s.server.ListenAndServe()
+}
+
+func (s *APIServer) setupRoutes() {
+	// Static routes
+	s.router.HandleFunc("/", s.handleDashboard).Methods("GET")
+	s.router.HandleFunc("/blocklists", s.handleBlocklistsPage).Methods("GET")
+	s.router.HandleFunc("/settings", s.handleSettingsPage).Methods("GET")
+	s.router.HandleFunc("/about", s.handleAboutPage).Methods("GET")
+
+	// API endpoints
+	s.router.HandleFunc("/api/v1/metrics", s.handleMetrics).Methods("GET")
+	s.router.HandleFunc("/api/v1/status", s.handleStatus).Methods("GET")
+	s.router.HandleFunc("/api/v1/queries", s.handleQueries).Methods("GET")
+	s.router.HandleFunc("/api/v1/stats/hourly", s.handleHourlyStats).Methods("GET")
+	s.router.HandleFunc("/api/v1/clients", s.handleClients).Methods("GET")
+
+	// Blocklist management routes
+	s.router.HandleFunc("/api/v1/blocklists", s.handleGetBlocklists).Methods("GET")
+	s.router.HandleFunc("/api/v1/blocklist/domain", s.handleAddDomainToBlocklist).Methods("POST")
+	s.router.HandleFunc("/api/v1/blocklist/domain", s.handleRemoveDomainFromBlocklist).Methods("DELETE")
+
+	// Whitelist management routes
+	s.router.HandleFunc("/api/v1/whitelist", s.handleGetWhitelist).Methods("GET")
+	s.router.HandleFunc("/api/v1/whitelist", s.handleAddToWhitelist).Methods("POST")
+	s.router.HandleFunc("/api/v1/whitelist", s.handleRemoveFromWhitelist).Methods("DELETE")
+
+	// Regex pattern routes
+	s.router.HandleFunc("/api/v1/regex", s.handleGetRegexPatterns).Methods("GET")
+	s.router.HandleFunc("/api/v1/regex", s.handleAddRegexPattern).Methods("POST")
+	s.router.HandleFunc("/api/v1/regex", s.handleRemoveRegexPattern).Methods("DELETE")
 }
 
 func (s *APIServer) Shutdown(ctx context.Context) error {
@@ -245,4 +271,17 @@ func (s *APIServer) handleStatus(w http.ResponseWriter, r *http.Request) {
 // Add SetDNSServer method
 func (s *APIServer) SetDNSServer(server *dns.Server) {
 	s.dnsServer = server
+}
+
+// Add handler functions for each page
+func (s *APIServer) handleBlocklistsPage(w http.ResponseWriter, r *http.Request) {
+	s.templates.ExecuteTemplate(w, "blocklists.html", nil)
+}
+
+func (s *APIServer) handleSettingsPage(w http.ResponseWriter, r *http.Request) {
+	s.templates.ExecuteTemplate(w, "settings.html", nil)
+}
+
+func (s *APIServer) handleAboutPage(w http.ResponseWriter, r *http.Request) {
+	s.templates.ExecuteTemplate(w, "about.html", nil)
 }
