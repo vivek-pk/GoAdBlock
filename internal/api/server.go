@@ -208,6 +208,9 @@ func (s *APIServer) Start() error {
 func (s *APIServer) setupRoutes() {
 	// Static routes
 	s.router.HandleFunc("/", s.handleDashboard).Methods("GET")
+	s.router.HandleFunc("/blocklists", s.handleBlocklistsPage).Methods("GET")
+	s.router.HandleFunc("/settings", s.handleSettingsPage).Methods("GET")
+	s.router.HandleFunc("/about", s.handleAboutPage).Methods("GET")
 
 	// API endpoints
 	s.router.HandleFunc("/api/v1/metrics", s.handleMetrics).Methods("GET")
@@ -268,4 +271,17 @@ func (s *APIServer) handleStatus(w http.ResponseWriter, r *http.Request) {
 // Add SetDNSServer method
 func (s *APIServer) SetDNSServer(server *dns.Server) {
 	s.dnsServer = server
+}
+
+// Add handler functions for each page
+func (s *APIServer) handleBlocklistsPage(w http.ResponseWriter, r *http.Request) {
+	s.templates.ExecuteTemplate(w, "blocklists.html", nil)
+}
+
+func (s *APIServer) handleSettingsPage(w http.ResponseWriter, r *http.Request) {
+	s.templates.ExecuteTemplate(w, "settings.html", nil)
+}
+
+func (s *APIServer) handleAboutPage(w http.ResponseWriter, r *http.Request) {
+	s.templates.ExecuteTemplate(w, "about.html", nil)
 }
