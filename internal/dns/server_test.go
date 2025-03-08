@@ -52,13 +52,21 @@ func setupTestServer(t *testing.T) (*Server, string, func()) {
 	}
 
 	adblocker := blocker.New()
-	_ = adblocker.LoadFromURL("https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts")
+	_ = adblocker.LoadFromURL("https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts", "default")
 
 	// Create mock notifier
 	notifier := &mockNotifier{}
 
-	// Pass notifier to NewServer
-	server := NewServer(adblocker, notifier)
+	// Create server config
+	config := ServerConfig{
+		UpstreamServers: []string{"8.8.8.8:53", "1.1.1.1:53"},
+		BlockingMode:    "zero_ip",
+		BlockingIP:      "0.0.0.0",
+		CacheSize:       1000,
+	}
+
+	// Pass notifier and config to NewServer
+	server := NewServer(adblocker, notifier, config)
 	addr := fmt.Sprintf(":%d", port)
 	errChan := make(chan error, 1)
 
@@ -200,13 +208,21 @@ func TestCaching(t *testing.T) {
 	}
 }
 
-// Add this new test function
+// Update the TestQueryNotifications function too
 func TestQueryNotifications(t *testing.T) {
 	notifier := &mockNotifier{}
 	adblocker := blocker.New()
-	_ = adblocker.LoadFromURL("https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts")
+	_ = adblocker.LoadFromURL("https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts", "default")
 
-	server := NewServer(adblocker, notifier)
+	// Create server config
+	config := ServerConfig{
+		UpstreamServers: []string{"8.8.8.8:53", "1.1.1.1:53"},
+		BlockingMode:    "zero_ip",
+		BlockingIP:      "0.0.0.0",
+		CacheSize:       1000,
+	}
+
+	server := NewServer(adblocker, notifier, config)
 	port, err := findAvailablePort()
 	if err != nil {
 		t.Fatalf("Failed to find available port: %v", err)

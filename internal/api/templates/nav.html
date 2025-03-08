@@ -1,0 +1,69 @@
+{{ define "nav" }}
+<nav
+  class="bg-white shadow-sm w-64 min-h-screen fixed left-0 top-0 transform transition-transform duration-200 ease-in-out"
+  :class="{'translate-x-0': sidebarOpen, '-translate-x-full lg:translate-x-0': !sidebarOpen}"
+>
+  <div class="p-4">
+    <div class="flex items-center justify-between">
+      <h1 class="text-xl font-bold text-gray-800">GoAdBlock</h1>
+      <!-- Mobile menu button -->
+      <button @click="sidebarOpen = !sidebarOpen" class="lg:hidden">
+        <svg
+          class="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 6h16M4 12h16M4 18h16"
+          />
+        </svg>
+      </button>
+    </div>
+
+    <!-- Status indicator -->
+    <div class="mt-4">
+      <span
+        class="px-3 py-1 text-sm rounded-full inline-flex items-center"
+        :class="status === 'running' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+      >
+        <span
+          class="w-2 h-2 rounded-full mr-2"
+          :class="status === 'running' ? 'bg-green-600' : 'bg-red-600'"
+        ></span>
+        <span x-text="status === 'running' ? 'Running' : 'Stopped'"></span>
+      </span>
+    </div>
+
+    <!-- Navigation menu -->
+    <div class="mt-6">
+      <nav class="space-y-2">
+        <a
+          href="/"
+          class="block px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md transition-colors duration-200"
+          :class="{ 'bg-gray-100': window.location.pathname === '/' }"
+        >
+          Dashboard
+        </a>
+        <a
+          href="/queries"
+          class="block px-4 py-2 text-gray-600 hover:bg-gray-100 rounded-md transition-colors duration-200"
+          :class="{ 'bg-gray-100': window.location.pathname === '/queries' }"
+        >
+          Recent DNS Queries
+        </a>
+      </nav>
+    </div>
+  </div>
+</nav>
+
+<!-- Mobile backdrop -->
+<div
+  class="fixed inset-0 bg-gray-600 bg-opacity-75 lg:hidden"
+  x-show="sidebarOpen"
+  @click="sidebarOpen = false"
+></div>
+{{ end }}

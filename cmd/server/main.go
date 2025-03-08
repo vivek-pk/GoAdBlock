@@ -16,9 +16,30 @@ import (
 func main() {
 	// Initialize ad blocker
 	adblocker := blocker.New()
-	err := adblocker.LoadFromURL("https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts")
+
+	// Load blocklists with debug info
+	log.Println("Loading blocklists...")
+	blocklists := map[string]string{
+		"stevenblack": "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts",
+		"adaway":      "https://adaway.org/hosts.txt",
+	}
+
+	err := adblocker.LoadMultipleLists(blocklists)
 	if err != nil {
-		log.Fatalf("Failed to load ad domains: %v", err)
+		log.Fatalf("Failed to load blocklists: %v", err)
+	}
+
+	// Print stats after loading
+	stats := adblocker.GetBlocklistStats()
+	log.Printf("Loaded %d blocklists", len(stats))
+	for name, stat := range stats {
+		log.Printf("Blocklist %s: %d domains", name, stat["domains"])
+	}
+
+	// Add regex pattern for blocking
+	err = adblocker.AddBlockRegex(`^ad[0-9]+\.example\.com$`)
+	if err != nil {
+		log.Fatalf("Failed to add block regex: %v", err)
 	}
 
 	// Create context for graceful shutdown
@@ -35,27 +56,50 @@ func main() {
 		log.Fatalf("Failed to create API server: %v", err)
 	}
 
-	// Create DNS server with API notifier
-	dnsServer := dns.NewServer(adblocker, apiServer)
+	// Create DNS server with API notifier and config
+	dnsConfig := dns.ServerConfig{
+		UpstreamServers: []string{"8.8.8.8:53", "1.1.1.1:53"},
+		BlockingMode:    "zero_ip",
+		BlockingIP:      "0.0.0.0",
+		CacheSize:       10000,
+	}
+	dnsServer := dns.NewServer(adblocker, apiServer, dnsConfig)
 
 	// Update API server's DNS server reference
 	apiServer.SetDNSServer(dnsServer)
 
+	// Start servers one by one
+	log.Println("Starting DNS server on :53")
 	dnsErrChan := make(chan error, 1)
 	go func() {
-		log.Println("Starting GoAdBlock DNS server on :53")
 		if err := dnsServer.Start(":53"); err != nil {
 			dnsErrChan <- err
 		}
 	}()
 
+	// Wait for DNS server to be ready
+	select {
+	case <-dnsServer.Ready:
+		log.Println("DNS server started successfully")
+	case err := <-dnsErrChan:
+		log.Fatalf("Failed to start DNS server: %v", err)
+	case <-time.After(5 * time.Second):
+		log.Fatalf("DNS server startup timed out")
+	}
+
+	// Now start the API server
+	log.Println("Starting API server on :8080")
 	apiErrChan := make(chan error, 1)
 	go func() {
-		log.Println("Starting API server on :8080")
 		if err := apiServer.Start(); err != nil {
 			apiErrChan <- err
 		}
 	}()
+
+	// Give API server time to initialize
+	time.Sleep(500 * time.Millisecond)
+	log.Println("API server started successfully")
+	log.Println("GoAdBlock is running. Press Ctrl+C to stop.")
 
 	// Wait for shutdown signal or error
 	select {
@@ -65,9 +109,12 @@ func main() {
 		ctx, cancel := context.WithTimeout(ctx, 5*time.Second)
 		defer cancel()
 
+		log.Println("Shutting down API server...")
 		if err := apiServer.Shutdown(ctx); err != nil {
 			log.Printf("Error shutting down API server: %v", err)
 		}
+
+		log.Println("Shutting down DNS server...")
 		if err := dnsServer.Shutdown(ctx); err != nil {
 			log.Printf("Error shutting down DNS server: %v", err)
 		}

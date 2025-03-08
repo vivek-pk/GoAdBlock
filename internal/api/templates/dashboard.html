@@ -3,234 +3,635 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>GoAdBlock Dashboard</title>
+    <title>GoAdBlock Command Center</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script
       defer
       src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"
     ></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700&family=Rajdhani:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'neo-black': '#0a0d12',
+              'neo-dark': '#141824',
+              'neo-gray': '#1e2430',
+              'neo-light': '#2c3341',
+              'neo-blue': '#03edf9',
+              'neo-purple': '#bf5af2',
+              'neo-green': '#39e6a6',
+              'neo-red': '#ff453a',
+            },
+            fontFamily: {
+              'orbitron': ['Orbitron', 'sans-serif'],
+              'rajdhani': ['Rajdhani', 'sans-serif'],
+            },
+            boxShadow: {
+              'glow-blue':
+                '0 0 5px rgba(3, 237, 249, 0.7), 0 0 15px rgba(3, 237, 249, 0.3)',
+              'glow-purple':
+                '0 0 5px rgba(191, 90, 242, 0.7), 0 0 15px rgba(191, 90, 242, 0.3)',
+              'glow-green':
+                '0 0 5px rgba(57, 230, 166, 0.7), 0 0 15px rgba(57, 230, 166, 0.3)',
+              'glow-red':
+                '0 0 5px rgba(255, 69, 58, 0.7), 0 0 15px rgba(255, 69, 58, 0.3)',
+            },
+          },
+        },
+      };
+    </script>
+
+    <style>
+      /* Circuit board background pattern */
+      .neo-bg {
+        background-color: #0a0d12;
+        background-image: radial-gradient(#03edf920 2px, transparent 2px),
+          linear-gradient(#03edf910 1px, transparent 1px);
+        background-size: 30px 30px;
+        background-position: 0 0, 15px 15px;
+      }
+
+      /* Glowing text */
+      .glow-text-blue {
+        text-shadow: 0 0 5px rgba(3, 237, 249, 0.7);
+      }
+
+      .glow-text-green {
+        text-shadow: 0 0 5px rgba(57, 230, 166, 0.7);
+      }
+
+      .glow-text-red {
+        text-shadow: 0 0 5px rgba(255, 69, 58, 0.7);
+      }
+
+      /* Sci-fi border */
+      .neo-border {
+        border: 1px solid rgba(3, 237, 249, 0.3);
+        box-shadow: inset 0 0 10px rgba(3, 237, 249, 0.1);
+      }
+
+      /* Neo overlay */
+      .neo-overlay {
+        position: relative;
+      }
+
+      .neo-overlay::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(3, 237, 249, 0.5),
+          transparent
+        );
+      }
+
+      /* Custom scrollbar */
+      ::-webkit-scrollbar {
+        width: 5px;
+        height: 5px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: #141824;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: #03edf9;
+        border-radius: 3px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: rgba(3, 237, 249, 0.7);
+      }
+
+      /* Pulse animation */
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.6;
+        }
+      }
+
+      .neo-pulse {
+        animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+      }
+
+      /* Animated lines */
+      .line-animation {
+        position: relative;
+        overflow: hidden;
+      }
+
+      .line-animation::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 1px;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(3, 237, 249, 0.5),
+          transparent
+        );
+        animation: line-slide 3s linear infinite;
+      }
+
+      @keyframes line-slide {
+        0% {
+          left: -100%;
+        }
+        100% {
+          left: 100%;
+        }
+      }
+    </style>
   </head>
-  <body class="bg-gray-100" x-data="dashboard()">
-    <div class="min-h-screen">
-      <nav class="bg-white shadow-sm">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div class="flex justify-between h-16">
-            <div class="flex">
-              <div class="flex-shrink-0 flex items-center">
-                <h1 class="text-xl font-bold text-gray-800">GoAdBlock</h1>
-              </div>
-            </div>
-            <div class="flex items-center">
+
+  <body class="neo-bg font-rajdhani text-gray-200" x-data="dashboard()">
+    <div class="min-h-screen flex">
+      <!-- Sidebar Navigation -->
+      <div class="bg-neo-dark neo-border w-64 fixed h-full">
+        <div
+          class="p-4 flex items-center space-x-3 border-b border-neo-blue border-opacity-20"
+        >
+          <div
+            class="w-8 h-8 rounded-full bg-neo-blue bg-opacity-20 flex items-center justify-center"
+          >
+            <div class="w-3 h-3 rounded-full bg-neo-blue neo-pulse"></div>
+          </div>
+          <h1 class="text-xl font-orbitron font-bold text-white glow-text-blue">
+            GOADBLOCK
+          </h1>
+        </div>
+
+        <div class="pt-6 pb-2 px-4">
+          <p class="uppercase text-xs tracking-widest text-gray-500">
+            SYSTEM STATUS
+          </p>
+          <div
+            class="mt-2 px-2 py-2 bg-neo-gray rounded flex justify-between items-center"
+          >
+            <span class="text-sm">Defense Shield</span>
+            <div class="flex items-center space-x-2">
+              <div
+                class="w-2 h-2 rounded-full neo-pulse"
+                :class="status === 'running' ? 'bg-neo-green' : 'bg-neo-red'"
+              ></div>
               <span
-                class="px-3 py-1 text-sm rounded-full"
-                :class="status === 'running' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'"
+                class="text-xs uppercase font-medium"
+                :class="status === 'running' ? 'text-neo-green' : 'text-neo-red'"
+                x-text="status === 'running' ? 'Active' : 'Offline'"
+              ></span>
+            </div>
+          </div>
+        </div>
+
+        <nav class="mt-4">
+          <div class="px-4 py-2">
+            <p class="uppercase text-xs tracking-widest text-gray-500 mb-2">
+              NAVIGATION
+            </p>
+
+            <a
+              href="#"
+              class="flex items-center space-x-3 px-3 py-2 text-neo-blue bg-neo-blue bg-opacity-10 rounded"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-                <span
-                  x-text="status === 'running' ? 'Running' : 'Stopped'"
-                ></span>
-              </span>
-            </div>
-          </div>
-        </div>
-      </nav>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                />
+              </svg>
+              <span>Command Center</span>
+            </a>
 
-      <main class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          <!-- Stats cards -->
-          <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="px-4 py-5 sm:p-6">
-              <dt class="text-sm font-medium text-gray-500 truncate">
-                Total Queries
-              </dt>
-              <dd
-                class="mt-1 text-3xl font-semibold text-gray-900"
-                x-text="metrics.totalQueries"
-              ></dd>
-            </div>
-          </div>
-          <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="px-4 py-5 sm:p-6">
-              <dt class="text-sm font-medium text-gray-500 truncate">
-                Blocked Queries
-              </dt>
-              <dd
-                class="mt-1 text-3xl font-semibold text-gray-900"
-                x-text="metrics.blockedQueries"
-              ></dd>
-            </div>
-          </div>
-          <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="px-4 py-5 sm:p-6">
-              <dt class="text-sm font-medium text-gray-500 truncate">
-                Cache Hits
-              </dt>
-              <dd
-                class="mt-1 text-3xl font-semibold text-gray-900"
-                x-text="metrics.cacheHits"
-              ></dd>
-            </div>
-          </div>
-          <div class="bg-white overflow-hidden shadow rounded-lg">
-            <div class="px-4 py-5 sm:p-6">
-              <dt class="text-sm font-medium text-gray-500 truncate">
-                Cache Misses
-              </dt>
-              <dd
-                class="mt-1 text-3xl font-semibold text-gray-900"
-                x-text="metrics.cacheMisses"
-              ></dd>
-            </div>
-          </div>
-        </div>
-
-        <div class="mt-8 bg-white overflow-hidden shadow rounded-lg">
-          <div class="px-4 py-5 sm:p-6">
-            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
-              24 Hour Statistics
-            </h3>
-            <div style="height: 300px">
-              <canvas id="statsChart"></canvas>
-            </div>
-          </div>
-        </div>
-
-        <div class="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
-          <div class="px-4 py-5 sm:px-6">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">
-              Active Clients
-            </h3>
-          </div>
-          <div class="flex flex-col">
-            <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-              <div
-                class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8"
+            <a
+              href="#"
+              class="flex items-center space-x-3 px-3 py-2 text-gray-400 hover:bg-neo-blue hover:bg-opacity-10 rounded mt-1 transition-colors duration-200"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
               >
-                <div
-                  class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg"
-                >
-                  <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                      <tr>
-                        <th
-                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          IP Address
-                        </th>
-                        <th
-                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          Total Queries
-                        </th>
-                        <th
-                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          Blocked Queries
-                        </th>
-                        <th
-                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          Last Seen
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                      <template x-for="client in clientStats" :key="client.ip">
-                        <tr>
-                          <td
-                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                            x-text="client.ip"
-                          ></td>
-                          <td
-                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                            x-text="client.totalQueries"
-                          ></td>
-                          <td
-                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                            x-text="client.blockedQueries"
-                          ></td>
-                          <td
-                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
-                            x-text="client.lastSeen"
-                          ></td>
-                        </tr>
-                      </template>
-                    </tbody>
-                  </table>
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                />
+              </svg>
+              <span>Block Lists</span>
+            </a>
+
+            <a
+              href="#"
+              class="flex items-center space-x-3 px-3 py-2 text-gray-400 hover:bg-neo-blue hover:bg-opacity-10 rounded mt-1 transition-colors duration-200"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
+                />
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                />
+              </svg>
+              <span>System Config</span>
+            </a>
+
+            <a
+              href="#"
+              class="flex items-center space-x-3 px-3 py-2 text-gray-400 hover:bg-neo-blue hover:bg-opacity-10 rounded mt-1 transition-colors duration-200"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                class="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                />
+              </svg>
+              <span>About</span>
+            </a>
+          </div>
+        </nav>
+
+        <div class="absolute bottom-0 left-0 right-0 p-4">
+          <div class="mt-auto pt-4 border-t border-neo-blue border-opacity-20">
+            <div class="text-xs text-center text-gray-500">
+              <p>SYSTEM v1.0.3</p>
+              <p class="mt-1">SHIELDS ACTIVE</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main Content -->
+      <main class="ml-64 flex-1 p-6">
+        <header
+          class="flex justify-between items-center mb-8 pb-4 border-b border-neo-blue border-opacity-20"
+        >
+          <h1 class="text-2xl font-orbitron font-bold glow-text-blue">
+            Command Center
+          </h1>
+          <div class="text-sm">
+            <span
+              class="px-3 py-1 rounded-full bg-opacity-20"
+              :class="status === 'running' ? 'bg-neo-green text-neo-green' : 'bg-neo-red text-neo-red'"
+            >
+              <span
+                x-text="status === 'running' ? 'SYSTEM ACTIVE' : 'SYSTEM OFFLINE'"
+              ></span>
+            </span>
+          </div>
+        </header>
+
+        <!-- Stats Grid -->
+        <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <!-- Total Queries -->
+          <div
+            class="bg-neo-dark neo-border neo-overlay rounded-lg overflow-hidden"
+          >
+            <div class="px-6 py-5">
+              <div class="flex items-center">
+                <div class="p-2 rounded-lg bg-neo-blue bg-opacity-10 mr-4">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-6 w-6 text-neo-blue"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-gray-400">Total Queries</p>
+                  <p
+                    class="mt-1 text-2xl font-semibold glow-text-blue"
+                    x-text="metrics.totalQueries"
+                  ></p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Blocked Queries -->
+          <div
+            class="bg-neo-dark neo-border neo-overlay rounded-lg overflow-hidden"
+          >
+            <div class="px-6 py-5">
+              <div class="flex items-center">
+                <div class="p-2 rounded-lg bg-neo-red bg-opacity-10 mr-4">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-6 w-6 text-neo-red"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-gray-400">
+                    Blocked Queries
+                  </p>
+                  <p
+                    class="mt-1 text-2xl font-semibold glow-text-red"
+                    x-text="metrics.blockedQueries"
+                  ></p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Cache Hits -->
+          <div
+            class="bg-neo-dark neo-border neo-overlay rounded-lg overflow-hidden"
+          >
+            <div class="px-6 py-5">
+              <div class="flex items-center">
+                <div class="p-2 rounded-lg bg-neo-purple bg-opacity-10 mr-4">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-6 w-6 text-neo-purple"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-gray-400">Cache Hits</p>
+                  <p
+                    class="mt-1 text-2xl font-semibold"
+                    style="color: #bf5af2"
+                    x-text="metrics.cacheHits"
+                  ></p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Block Percentage -->
+          <div
+            class="bg-neo-dark neo-border neo-overlay rounded-lg overflow-hidden"
+          >
+            <div class="px-6 py-5">
+              <div class="flex items-center">
+                <div class="p-2 rounded-lg bg-neo-green bg-opacity-10 mr-4">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    class="h-6 w-6 text-neo-green"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M11 3.055A9.001 9.001 0 1020.945 13H11V3.055z"
+                    />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M20.488 9H15V3.512A9.025 9.025 0 0120.488 9z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-gray-400">Block Rate</p>
+                  <p
+                    class="mt-1 text-2xl font-semibold glow-text-green"
+                    x-text="metrics.totalQueries > 0 ? ((metrics.blockedQueries / metrics.totalQueries) * 100).toFixed(1) + '%' : '0%'"
+                  ></p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Recent queries table -->
-        <div class="mt-8 bg-white shadow overflow-hidden sm:rounded-lg">
-          <div class="px-4 py-5 sm:px-6">
-            <h3 class="text-lg leading-6 font-medium text-gray-900">
-              Recent DNS Queries
-            </h3>
+        <!-- Charts Section -->
+        <div
+          class="mt-8 bg-neo-dark neo-border neo-overlay rounded-lg p-6 line-animation"
+        >
+          <h2 class="text-lg font-orbitron font-semibold mb-6">
+            Network Traffic Analysis
+          </h2>
+          <div class="h-80">
+            <canvas id="statsChart"></canvas>
           </div>
-          <div class="flex flex-col">
-            <div class="-my-2 overflow-x-auto sm:-mx-6 lg:-mx-8">
-              <div
-                class="py-2 align-middle inline-block min-w-full sm:px-6 lg:px-8"
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+          <!-- Active Clients -->
+          <div
+            class="bg-neo-dark neo-border neo-overlay rounded-lg overflow-hidden"
+          >
+            <div class="px-6 py-4 border-b border-neo-blue border-opacity-20">
+              <h2 class="text-lg font-orbitron">Client Analysis</h2>
+            </div>
+            <div class="overflow-x-auto" style="max-height: 400px">
+              <table
+                class="min-w-full divide-y divide-neo-blue divide-opacity-20"
               >
-                <div
-                  class="shadow overflow-hidden border-b border-gray-200 sm:rounded-lg"
-                >
-                  <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
-                      <tr>
-                        <th
-                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          Domain
-                        </th>
-                        <th
-                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          Status
-                        </th>
-                        <th
-                          class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                        >
-                          Time
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody class="bg-white divide-y divide-gray-200">
-                      <template x-for="query in recentQueries" :key="query.id">
-                        <tr>
-                          <td
-                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-900"
-                            x-text="query.domain"
-                          ></td>
-                          <td class="px-6 py-4 whitespace-nowrap">
-                            <span
-                              class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full"
-                              :class="query.blocked ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'"
-                              x-text="query.blocked ? 'Blocked' : 'Allowed'"
-                            ></span>
-                          </td>
-                          <td
-                            class="px-6 py-4 whitespace-nowrap text-sm text-gray-500"
-                            x-text="query.time"
-                          ></td>
-                        </tr>
-                      </template>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
+                <thead class="bg-neo-gray">
+                  <tr>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400"
+                    >
+                      IP Address
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400"
+                    >
+                      Queries
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400"
+                    >
+                      Blocked
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400"
+                    >
+                      Last Activity
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-neo-blue divide-opacity-10">
+                  <template x-for="client in clientStats" :key="client.ip">
+                    <tr
+                      class="hover:bg-neo-blue hover:bg-opacity-5 transition-colors"
+                    >
+                      <td
+                        class="px-6 py-4 whitespace-nowrap text-sm"
+                        x-text="client.ip"
+                      ></td>
+                      <td
+                        class="px-6 py-4 whitespace-nowrap text-sm"
+                        x-text="client.totalQueries"
+                      ></td>
+                      <td
+                        class="px-6 py-4 whitespace-nowrap text-sm"
+                        x-text="client.blockedQueries"
+                      ></td>
+                      <td
+                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-400"
+                        x-text="client.lastSeen"
+                      ></td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          <!-- Recent Queries -->
+          <div
+            class="bg-neo-dark neo-border neo-overlay rounded-lg overflow-hidden"
+          >
+            <div class="px-6 py-4 border-b border-neo-blue border-opacity-20">
+              <h2 class="text-lg font-orbitron">Recent Queries</h2>
+            </div>
+            <div class="overflow-x-auto" style="max-height: 400px">
+              <table
+                class="min-w-full divide-y divide-neo-blue divide-opacity-20"
+              >
+                <thead class="bg-neo-gray">
+                  <tr>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400"
+                    >
+                      Domain
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400"
+                    >
+                      Status
+                    </th>
+                    <th
+                      scope="col"
+                      class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider text-gray-400"
+                    >
+                      Time
+                    </th>
+                  </tr>
+                </thead>
+                <tbody class="divide-y divide-neo-blue divide-opacity-10">
+                  <template x-for="query in recentQueries" :key="query.id">
+                    <tr
+                      class="hover:bg-neo-blue hover:bg-opacity-5 transition-colors"
+                    >
+                      <td
+                        class="px-6 py-4 whitespace-nowrap text-sm font-mono"
+                        x-text="query.domain"
+                      ></td>
+                      <td class="px-6 py-4 whitespace-nowrap">
+                        <span
+                          class="px-2 py-0.5 text-xs font-medium rounded"
+                          :class="query.blocked ? 'bg-neo-red bg-opacity-20 text-neo-red' : 'bg-neo-green bg-opacity-20 text-neo-green'"
+                          x-text="query.blocked ? 'BLOCKED' : 'ALLOWED'"
+                        ></span>
+                      </td>
+                      <td
+                        class="px-6 py-4 whitespace-nowrap text-sm text-gray-400"
+                        x-text="query.time"
+                      ></td>
+                    </tr>
+                  </template>
+                </tbody>
+              </table>
             </div>
           </div>
         </div>
+
+        <!-- Footer -->
+        <footer class="mt-12 pb-6">
+          <div class="text-center text-xs text-gray-500">
+            <p>
+              GoAdBlock Defense System • Operational Time:
+              <span x-text="getUptime()"></span>
+            </p>
+          </div>
+        </footer>
       </main>
     </div>
 
     <script>
       function dashboard() {
         let chart = null;
+        const startTime = new Date();
 
         return {
           status: 'running',
@@ -247,14 +648,32 @@
             blocks: [],
           },
           clientStats: [],
+
           init() {
             this.initChart();
             this.fetchData();
-            // Update every second
-            setInterval(() => this.fetchData(), 1000);
+            // Update every 2 seconds
+            setInterval(() => this.fetchData(), 2000);
           },
+
+          getUptime() {
+            const now = new Date();
+            const diff = now - startTime;
+            const hours = Math.floor(diff / 3600000);
+            const minutes = Math.floor((diff % 3600000) / 60000);
+            const seconds = Math.floor((diff % 60000) / 1000);
+            return `${hours.toString().padStart(2, '0')}:${minutes
+              .toString()
+              .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+          },
+
           initChart() {
             const ctx = document.getElementById('statsChart').getContext('2d');
+
+            // Chart.js customization for sci-fi theme
+            Chart.defaults.color = '#9ca3af';
+            Chart.defaults.font.family = "'Rajdhani', sans-serif";
+
             chart = new Chart(ctx, {
               type: 'line',
               data: {
@@ -262,16 +681,26 @@
                 datasets: [
                   {
                     label: 'Total Requests',
-                    borderColor: '#60A5FA',
-                    backgroundColor: '#60A5FA20',
+                    borderColor: '#03edf9',
+                    backgroundColor: 'rgba(3, 237, 249, 0.1)',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#03edf9',
+                    pointBorderColor: '#141824',
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
                     data: [],
                     fill: true,
                     tension: 0.4,
                   },
                   {
                     label: 'Blocked Requests',
-                    borderColor: '#EF4444',
-                    backgroundColor: '#EF444420',
+                    borderColor: '#ff453a',
+                    backgroundColor: 'rgba(255, 69, 58, 0.1)',
+                    borderWidth: 2,
+                    pointBackgroundColor: '#ff453a',
+                    pointBorderColor: '#141824',
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
                     data: [],
                     fill: true,
                     tension: 0.4,
@@ -282,11 +711,35 @@
                 responsive: true,
                 maintainAspectRatio: false,
                 animation: {
-                  duration: 0, // Disable animation to prevent height issues
+                  duration: 800,
+                  easing: 'easeOutQuart',
                 },
                 plugins: {
                   legend: {
                     position: 'top',
+                    labels: {
+                      boxWidth: 15,
+                      usePointStyle: true,
+                      pointStyle: 'circle',
+                      padding: 20,
+                      font: {
+                        family: "'Rajdhani', sans-serif",
+                        size: 12,
+                      },
+                    },
+                  },
+                  tooltip: {
+                    backgroundColor: 'rgba(20, 24, 36, 0.9)',
+                    titleFont: {
+                      family: "'Orbitron', sans-serif",
+                      size: 12,
+                    },
+                    bodyFont: {
+                      family: "'Rajdhani', sans-serif",
+                      size: 12,
+                    },
+                    borderColor: '#03edf9',
+                    borderWidth: 1,
                   },
                 },
                 scales: {
@@ -294,19 +747,31 @@
                     beginAtZero: true,
                     ticks: {
                       precision: 0,
+                      font: {
+                        family: "'Rajdhani', sans-serif",
+                      },
                     },
-                    suggestedMax: 100, // Set a fixed max value
-                    grace: '5%', // Add some padding
+                    grid: {
+                      color: 'rgba(3, 237, 249, 0.1)',
+                      drawBorder: false,
+                    },
                   },
                   x: {
                     grid: {
-                      display: false,
+                      color: 'rgba(3, 237, 249, 0.05)',
+                      drawBorder: false,
+                    },
+                    ticks: {
+                      font: {
+                        family: "'Rajdhani', sans-serif",
+                      },
                     },
                   },
                 },
               },
             });
           },
+
           async fetchData() {
             try {
               // Fetch metrics
@@ -315,9 +780,8 @@
                 throw new Error('Metrics fetch failed');
               }
               const metricsData = await metricsResponse.json();
-              console.log('Metrics received:', metricsData); // Debug log
 
-              // Update metrics with proper fallbacks
+              // Update metrics
               this.metrics = {
                 totalQueries: metricsData.totalQueries || 0,
                 blockedQueries: metricsData.blockedQueries || 0,

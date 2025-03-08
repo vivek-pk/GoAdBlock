@@ -1,0 +1,49 @@
+{{ define "nav" }}
+<nav
+  class="fixed inset-y-0 left-0 w-64 bg-gray-800 text-white transition-transform duration-300 transform"
+  :class="{'translate-x-0': sidebarOpen, '-translate-x-64': !sidebarOpen}"
+>
+  <div class="p-6">
+    <div class="flex items-center justify-between">
+      <h1 class="text-xl font-bold">GoAdBlock</h1>
+      <button @click="sidebarOpen = false" class="lg:hidden">
+        <svg
+          class="w-6 h-6"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M6 18L18 6M6 6l12 12"
+          />
+        </svg>
+      </button>
+    </div>
+    <nav class="mt-8">
+      <a
+        href="/"
+        class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700 bg-gray-700"
+        >Dashboard</a
+      >
+      <a
+        href="/queries"
+        class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700"
+        >Recent Queries</a
+      >
+      <a
+        href="/clients"
+        class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700"
+        >Active Clients</a
+      >
+      <a
+        href="/settings"
+        class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-700"
+        >Settings</a
+      >
+    </nav>
+  </div>
+</nav>
+{{ end }}
