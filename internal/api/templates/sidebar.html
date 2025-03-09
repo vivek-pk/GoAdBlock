@@ -1,0 +1,367 @@
+<!-- TVA Sidebar -->
+<div
+  class="bg-tva-dark border-r-2 border-tva-orange w-64 fixed h-full overflow-y-auto monitor-glow sidebar-tva"
+  x-show="currentTheme === 'tva'"
+>
+  <div class="p-4 flex items-center space-x-3 border-b-2 border-tva-brown">
+    <div
+      class="w-10 h-10 rounded-full bg-tva-amber flex items-center justify-center overflow-hidden"
+    >
+      <div class="w-8 h-8 relative">
+        <!-- Simple Miss Minutes inspired icon -->
+        <div
+          class="absolute inset-0 rounded-full border-4 border-tva-dark"
+        ></div>
+        <div
+          class="absolute inset-1 rounded-full bg-tva-orange miss-minutes-dot"
+        ></div>
+        <div
+          class="absolute top-[45%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-5 h-1 bg-tva-dark rounded"
+        ></div>
+        <div
+          class="absolute top-[25%] left-[25%] w-1 h-1 bg-tva-dark rounded-full"
+        ></div>
+        <div
+          class="absolute top-[25%] right-[25%] w-1 h-1 bg-tva-dark rounded-full"
+        ></div>
+      </div>
+    </div>
+    <div>
+      <h1 class="text-xl font-serif text-tva-amber tracking-wide">
+        TVA INTERFACE
+      </h1>
+      <p class="text-xs text-tva-tan opacity-70">TEMPORAL DEFENSE</p>
+    </div>
+  </div>
+
+  <div class="pt-6 pb-2 px-4">
+    <p class="uppercase text-xs tracking-widest text-tva-orange opacity-80">
+      TIMELINE STATUS
+    </p>
+    <div
+      class="mt-2 px-2 py-2 bg-tva-black/30 rounded border border-tva-brown flex justify-between items-center"
+    >
+      <span class="text-sm">Sacred Timeline</span>
+      <div class="flex items-center space-x-2">
+        <div
+          class="w-2 h-2 rounded-full miss-minutes-dot"
+          :class="status === 'running' ? 'bg-tva-amber' : 'bg-red-500'"
+        ></div>
+        <span
+          class="text-xs uppercase font-mono"
+          :class="status === 'running' ? 'text-tva-amber' : 'text-red-500'"
+          x-text="status === 'running' ? 'PROTECTED' : 'BREACHED'"
+        ></span>
+      </div>
+    </div>
+  </div>
+
+  <div class="px-4 py-3">
+    <span class="text-xs text-tva-tan opacity-70 font-mono"
+      >Authorized Access Only</span
+    >
+    <div class="mt-1 w-full h-1 bg-tva-black overflow-hidden">
+      <div class="h-full bg-tva-orange" style="width: 73%"></div>
+    </div>
+  </div>
+
+  <nav class="mt-2">
+    <div class="px-4 py-2">
+      <p
+        class="uppercase text-xs tracking-widest text-tva-orange opacity-80 mb-2"
+      >
+        CONSOLE ACCESS
+      </p>
+
+      <a
+        href="/"
+        class="flex items-center space-x-3 px-3 py-2 rounded transition-colors duration-200 border"
+        :class="currentPage === 'dashboard' ? 'bg-tva-orange/20 border-tva-orange text-tva-amber' : 'border-transparent hover:bg-tva-orange/10 text-tva-tan'"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
+          />
+        </svg>
+        <span>MAIN CONSOLE</span>
+      </a>
+
+      <a
+        href="/blocklists"
+        class="flex items-center space-x-3 px-3 py-2 rounded mt-2 transition-colors duration-200 border"
+        :class="currentPage === 'blocklists' ? 'bg-tva-orange/20 border-tva-orange text-tva-amber' : 'border-transparent hover:bg-tva-orange/10 text-tva-tan'"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
+          />
+        </svg>
+        <span>VARIANT FILES</span>
+      </a>
+
+      <a
+        href="/settings"
+        class="flex items-center space-x-3 px-3 py-2 rounded mt-2 transition-colors duration-200 border"
+        :class="currentPage === 'settings' ? 'bg-tva-orange/20 border-tva-orange text-tva-amber' : 'border-transparent hover:bg-tva-orange/10 text-tva-tan'"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+          />
+        </svg>
+        <span>TEMPPAD CONFIG</span>
+      </a>
+
+      <a
+        href="/about"
+        class="flex items-center space-x-3 px-3 py-2 rounded mt-2 transition-colors duration-200 border"
+        :class="currentPage === 'about' ? 'bg-tva-orange/20 border-tva-orange text-tva-amber' : 'border-transparent hover:bg-tva-orange/10 text-tva-tan'"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-5 w-5"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <span>TIME KEEPERS</span>
+      </a>
+    </div>
+  </nav>
+
+  <div class="px-4 py-3 border-t border-tva-brown mt-4">
+    <p
+      class="uppercase text-xs tracking-widest text-tva-orange opacity-80 mb-2"
+    >
+      INTERFACE THEME
+    </p>
+    <div
+      class="flex items-center justify-between bg-tva-black/30 rounded px-3 py-2 border border-tva-brown"
+    >
+      <span
+        class="text-sm"
+        x-text="currentTheme === 'tva' ? 'TVA CONSOLE' : 'FLIGHT DECK'"
+      ></span>
+      <button
+        @click="toggleTheme()"
+        class="relative rounded-full w-12 h-6 transition-colors duration-300"
+        :class="currentTheme === 'tva' ? 'bg-tva-orange' : 'bg-emerald-500'"
+      >
+        <div
+          class="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-300"
+          :class="currentTheme === 'tva' ? '' : 'translate-x-6'"
+        ></div>
+      </button>
+    </div>
+  </div>
+
+  <div class="absolute bottom-0 left-0 right-0 p-4 border-t border-tva-brown">
+    <div class="text-xs font-mono">
+      <p class="text-center text-tva-orange">TIME VARIANCE AUTHORITY</p>
+      <div class="flex justify-center space-x-4 mt-2">
+        <div>V.1.0.3</div>
+        <div class="miss-minutes-dot text-tva-amber">●</div>
+        <div>FOR ALL TIME. ALWAYS.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Cockpit version of the sidebar -->
+<div
+  class="sidebar-cockpit fixed w-64 h-full overflow-y-auto cockpit-only bg-[#051826] border-r border-[#38bdf8]"
+  x-show="currentTheme === 'cockpit'"
+>
+  <div class="p-4 border-b border-[#38bdf8]">
+    <h1 class="text-xl font-['Orbitron'] text-[#38bdf8] text-center">
+      FLIGHT DECK
+    </h1>
+    <p class="text-xs text-center text-[#10b981] mt-1">
+      DEFENSIVE SYSTEMS ENGAGED
+    </p>
+  </div>
+
+  <div class="p-4">
+    <div class="bg-[#0a1020] border border-[#38bdf8] rounded-md p-3 mb-4">
+      <div class="text-xs text-[#10b981] mb-2 uppercase tracking-wider">
+        System Status
+      </div>
+      <div class="flex items-center justify-between">
+        <span class="text-[#e0f2f1]">Defense Shield</span>
+        <div class="flex items-center">
+          <div
+            class="w-2 h-2 rounded-full blink-slow"
+            :class="status === 'running' ? 'bg-[#10b981]' : 'bg-red-500'"
+          ></div>
+          <span
+            class="ml-2 text-xs"
+            :class="status === 'running' ? 'text-[#10b981]' : 'text-red-500'"
+            x-text="status === 'running' ? 'ACTIVE' : 'OFFLINE'"
+          ></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="mb-6">
+      <p class="text-xs text-[#10b981] uppercase tracking-wider mb-2">
+        Navigation
+      </p>
+
+      <a
+        href="/"
+        class="cockpit-nav-button"
+        :class="currentPage === 'dashboard' ? 'active' : ''"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-4 w-4 mr-2"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
+          />
+        </svg>
+        <span>Main HUD</span>
+      </a>
+
+      <a
+        href="/blocklists"
+        class="cockpit-nav-button"
+        :class="currentPage === 'blocklists' ? 'active' : ''"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-4 w-4 mr-2"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
+          />
+        </svg>
+        <span>Threat DB</span>
+      </a>
+
+      <a
+        href="/settings"
+        class="cockpit-nav-button"
+        :class="currentPage === 'settings' ? 'active' : ''"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-4 w-4 mr-2"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
+          />
+        </svg>
+        <span>Controls</span>
+      </a>
+
+      <a
+        href="/about"
+        class="cockpit-nav-button"
+        :class="currentPage === 'about' ? 'active' : ''"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-4 w-4 mr-2"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke="currentColor"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+          />
+        </svg>
+        <span>Crew Info</span>
+      </a>
+    </div>
+
+    <!-- Theme switcher -->
+    <div class="border-t border-[#38bdf8]/30 pt-4 mt-6">
+      <p class="text-xs text-[#10b981] uppercase tracking-wider mb-2">
+        Interface Mode
+      </p>
+      <div
+        class="flex items-center justify-between bg-[#0a1020] rounded p-2 border border-[#38bdf8]/50"
+      >
+        <span
+          class="text-sm"
+          x-text="currentTheme === 'tva' ? 'TVA CONSOLE' : 'FLIGHT DECK'"
+        ></span>
+        <button
+          @click="toggleTheme()"
+          class="relative rounded-full w-12 h-6 transition-colors duration-300"
+          :class="currentTheme === 'tva' ? 'bg-tva-orange' : 'bg-emerald-500'"
+        >
+          <div
+            class="absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-300"
+            :class="currentTheme === 'tva' ? '' : 'translate-x-6'"
+          ></div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div
+    class="absolute bottom-0 left-0 right-0 p-4 border-t border-[#38bdf8]/30 text-center"
+  >
+    <div class="text-xs">
+      <p class="text-[#10b981] mb-1">SECURE FLIGHT PROTOCOL</p>
+      <div class="text-[#e0f2f1]">SYSTEM v1.0.3</div>
+    </div>
+  </div>
+</div>

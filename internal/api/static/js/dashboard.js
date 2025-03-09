@@ -23,9 +23,15 @@ tailwind.config = {
 
 // Main dashboard functionality
 function dashboard() {
-  // Define startTime outside the return object to ensure it's created at initialization time
+  // Define startTime outside the return object
   const startTime = new Date();
   let chart = null;
+
+  // Get saved theme first thing
+  const savedTheme = localStorage.getItem('theme') || 'tva';
+
+  // Apply theme to body immediately (don't wait for Alpine)
+  document.body.classList.add(`theme-${savedTheme}`);
 
   return {
     status: 'running',
@@ -43,9 +49,13 @@ function dashboard() {
     },
     clientStats: [],
     currentPage: 'dashboard',
+    currentTheme: savedTheme,
     uptimeTick: 0, // Property for Alpine to track
 
     init() {
+      // Apply theme on initialization
+      this.applyTheme();
+
       this.initChart();
       this.fetchData();
 
@@ -68,6 +78,36 @@ function dashboard() {
       } else {
         this.currentPage = 'dashboard';
       }
+    },
+
+    toggleTheme() {
+      // Change theme with transition
+      document.body.classList.add('theme-transitioning');
+
+      setTimeout(() => {
+        this.currentTheme = this.currentTheme === 'tva' ? 'cockpit' : 'tva';
+        localStorage.setItem('theme', this.currentTheme);
+
+        // Apply the theme
+        document.body.classList.remove('theme-tva', 'theme-cockpit');
+        document.body.classList.add(`theme-${this.currentTheme}`);
+
+        // Recreate chart with new theme
+        if (this.currentPage === 'dashboard' && chart) {
+          chart.destroy();
+          this.initChart();
+        }
+
+        // After theme is applied, remove the transitioning class
+        setTimeout(() => {
+          document.body.classList.remove('theme-transitioning');
+        }, 500);
+      }, 100);
+    },
+
+    applyTheme() {
+      document.body.classList.remove('theme-tva', 'theme-cockpit');
+      document.body.classList.add(`theme-${this.currentTheme}`);
     },
 
     formatUptime() {
@@ -101,20 +141,192 @@ function dashboard() {
     },
 
     initChart() {
+      if (!window.Chart) {
+        console.error('Chart.js not loaded');
+        return;
+      }
+
       const ctx = document.getElementById('statsChart').getContext('2d');
+      if (!ctx) {
+        console.error('Could not find stats chart context');
+        return;
+      }
 
-      // Custom gradient for the sacred timeline
-      const sacredTimelineGradient = ctx.createLinearGradient(0, 0, 0, 300);
-      sacredTimelineGradient.addColorStop(0, 'rgba(255, 107, 0, 0.8)');
-      sacredTimelineGradient.addColorStop(1, 'rgba(255, 139, 40, 0.3)');
+      // Set colors based on current theme
+      let primaryColor, secondaryColor;
+      let primaryGradient, secondaryGradient;
+      let chartBackgroundColor;
 
-      // Custom gradient for the variant timeline
-      const variantTimelineGradient = ctx.createLinearGradient(0, 0, 0, 300);
-      variantTimelineGradient.addColorStop(0, 'rgba(121, 75, 40, 0.8)');
-      variantTimelineGradient.addColorStop(1, 'rgba(121, 75, 40, 0.3)');
+      if (this.currentTheme === 'tva') {
+        primaryColor = '#FF6B00';
+        secondaryColor = '#794B28';
+        chartBackgroundColor = '#1A1512'; // Dark background for TVA theme
 
-      Chart.defaults.color = '#794B28';
+        // Custom gradient for the sacred timeline
+        primaryGradient = ctx.createLinearGradient(0, 0, 0, 300);
+        primaryGradient.addColorStop(0, 'rgba(255, 107, 0, 0.8)');
+        primaryGradient.addColorStop(1, 'rgba(255, 139, 40, 0.3)');
+
+        // Custom gradient for the variant timeline
+        secondaryGradient = ctx.createLinearGradient(0, 0, 0, 300);
+        secondaryGradient.addColorStop(0, 'rgba(121, 75, 40, 0.8)');
+        secondaryGradient.addColorStop(1, 'rgba(121, 75, 40, 0.3)');
+      } else {
+        // Cockpit theme
+        primaryColor = '#10B981';
+        secondaryColor = '#38BDF8';
+        chartBackgroundColor = '#051826'; // Already dark for cockpit theme
+
+        // Custom gradient for cockpit primary line
+        primaryGradient = ctx.createLinearGradient(0, 0, 0, 300);
+        primaryGradient.addColorStop(0, 'rgba(16, 185, 129, 0.8)');
+        primaryGradient.addColorStop(1, 'rgba(16, 185, 129, 0.2)');
+
+        // Custom gradient for cockpit secondary line
+        secondaryGradient = ctx.createLinearGradient(0, 0, 0, 300);
+        secondaryGradient.addColorStop(0, 'rgba(56, 189, 248, 0.8)');
+        secondaryGradient.addColorStop(1, 'rgba(56, 189, 248, 0.2)');
+      }
+
+      Chart.defaults.color =
+        this.currentTheme === 'tva' ? '#794B28' : '#e0f2f1';
       Chart.defaults.font.family = "'B612 Mono', monospace";
+
+      const options = {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: {
+          duration: 1500,
+          easing: 'easeOutQuart',
+        },
+        plugins: {
+          legend: {
+            position: 'top',
+            labels: {
+              boxWidth: 15,
+              usePointStyle: true,
+              pointStyle: 'rectRot',
+              padding: 20,
+              font: {
+                family: "'B612 Mono', monospace",
+                size: 12,
+              },
+              color: this.currentTheme === 'tva' ? '#794B28' : '#e0f2f1',
+            },
+          },
+          tooltip: {
+            backgroundColor:
+              this.currentTheme === 'tva'
+                ? 'rgba(214, 188, 151, 0.9)'
+                : 'rgba(16, 185, 129, 0.8)',
+            titleFont: {
+              family: "'DM Serif Display', serif",
+              size: 14,
+              weight: 'bold',
+            },
+            bodyFont: {
+              family: "'B612 Mono', monospace",
+              size: 12,
+            },
+            borderColor: primaryColor,
+            borderWidth: 2,
+            titleColor: this.currentTheme === 'tva' ? '#251F17' : '#e0f2f1',
+            bodyColor: this.currentTheme === 'tva' ? '#251F17' : '#e0f2f1',
+            padding: 12,
+            boxPadding: 5,
+            displayColors: true,
+            callbacks: {
+              title: function (tooltipItems) {
+                return (
+                  (this.currentTheme === 'tva'
+                    ? 'TIMELINE POINT: '
+                    : 'SIGNAL DATA: ') + tooltipItems[0].label
+                );
+              }.bind(this),
+            },
+          },
+        },
+        scales: {
+          y: {
+            beginAtZero: true,
+            ticks: {
+              font: {
+                family: "'B612 Mono', monospace",
+                size: 10,
+              },
+              color: this.currentTheme === 'tva' ? '#D6BC97' : '#e0f2f1', // Lighter color for better contrast
+            },
+            grid: {
+              color:
+                this.currentTheme === 'tva'
+                  ? 'rgba(121, 75, 40, 0.15)'
+                  : 'rgba(16, 185, 129, 0.15)',
+              drawBorder: false,
+            },
+            title: {
+              display: true,
+              text:
+                this.currentTheme === 'tva'
+                  ? 'TIMELINE MAGNITUDE'
+                  : 'SIGNAL STRENGTH',
+              font: {
+                family: "'B612 Mono', monospace",
+                size: 10,
+                weight: 'bold',
+              },
+              color: this.currentTheme === 'tva' ? '#D6BC97' : '#e0f2f1', // Lighter color for better contrast
+            },
+          },
+          x: {
+            grid: {
+              color:
+                this.currentTheme === 'tva'
+                  ? 'rgba(121, 75, 40, 0.15)'
+                  : 'rgba(16, 185, 129, 0.1)',
+              drawBorder: false,
+            },
+            ticks: {
+              font: {
+                family: "'B612 Mono', monospace",
+                size: 10,
+              },
+              color: this.currentTheme === 'tva' ? '#D6BC97' : '#e0f2f1', // Lighter color for better contrast
+            },
+            title: {
+              display: true,
+              text:
+                this.currentTheme === 'tva'
+                  ? 'TEMPORAL COORDINATES'
+                  : 'SURVEILLANCE INTERVAL',
+              font: {
+                family: "'B612 Mono', monospace",
+                size: 10,
+                weight: 'bold',
+              },
+              color: this.currentTheme === 'tva' ? '#D6BC97' : '#e0f2f1', // Lighter color for better contrast
+            },
+          },
+        },
+        elements: {
+          line: {
+            borderWidth: 3,
+            borderCapStyle: 'round',
+          },
+          point: {
+            hitRadius: 10,
+            hoverRadius: 8,
+            hoverBorderWidth: 2,
+          },
+        },
+      };
+
+      // Set darker grid lines for cockpit theme
+      if (this.currentTheme === 'cockpit') {
+        options.scales.y.grid.color = 'rgba(16, 185, 129, 0.1)';
+        options.scales.x.grid.color = 'rgba(16, 185, 129, 0.1)';
+        options.scales.y.ticks.color = '#10b981';
+        options.scales.x.ticks.color = '#10b981';
+      }
 
       chart = new Chart(ctx, {
         type: 'line',
@@ -122,151 +334,77 @@ function dashboard() {
           labels: [],
           datasets: [
             {
-              label: 'Sacred Timeline',
-              borderColor: '#FF6B00',
-              backgroundColor: sacredTimelineGradient,
+              label:
+                this.currentTheme === 'tva'
+                  ? 'Sacred Timeline'
+                  : 'Primary Signals',
+              borderColor: primaryColor,
+              backgroundColor: primaryGradient,
               borderWidth: 3,
-              pointBackgroundColor: '#FF6B00',
-              pointBorderColor: '#1A1512',
+              pointBackgroundColor: primaryColor,
+              pointBorderColor:
+                this.currentTheme === 'tva' ? '#1A1512' : '#0a0e17',
               pointRadius: 6,
               pointHoverRadius: 8,
               data: [],
               fill: true,
               tension: 0.2,
-              pointStyle: 'rectRot',
+              pointStyle: this.currentTheme === 'tva' ? 'rectRot' : 'circle',
               borderDash: [],
             },
             {
-              label: 'Variant Branches',
-              borderColor: '#794B28',
-              backgroundColor: variantTimelineGradient,
+              label:
+                this.currentTheme === 'tva'
+                  ? 'Variant Branches'
+                  : 'Secondary Signals',
+              borderColor: secondaryColor,
+              backgroundColor: secondaryGradient,
               borderWidth: 2,
-              pointBackgroundColor: '#794B28',
-              pointBorderColor: '#1A1512',
+              pointBackgroundColor: secondaryColor,
+              pointBorderColor:
+                this.currentTheme === 'tva' ? '#1A1512' : '#0a0e17',
               pointRadius: 6,
               pointHoverRadius: 8,
               data: [],
               fill: true,
               tension: 0.2,
               borderDash: [5, 5],
-              pointStyle: 'rectRot',
+              pointStyle: this.currentTheme === 'tva' ? 'rectRot' : 'triangle',
             },
           ],
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          animation: {
-            duration: 1500,
-            easing: 'easeOutQuart',
-          },
-          plugins: {
-            legend: {
-              position: 'top',
-              labels: {
-                boxWidth: 15,
-                usePointStyle: true,
-                pointStyle: 'rectRot',
-                padding: 20,
-                font: {
-                  family: "'B612 Mono', monospace",
-                  size: 12,
-                },
-                color: '#794B28',
-              },
-            },
-            tooltip: {
-              backgroundColor: 'rgba(214, 188, 151, 0.9)',
-              titleFont: {
-                family: "'DM Serif Display', serif",
-                size: 14,
-                weight: 'bold',
-              },
-              bodyFont: {
-                family: "'B612 Mono', monospace",
-                size: 12,
-              },
-              borderColor: '#FF6B00',
-              borderWidth: 2,
-              titleColor: '#251F17',
-              bodyColor: '#251F17',
-              padding: 12,
-              boxPadding: 5,
-              displayColors: true,
-              callbacks: {
-                title: function (tooltipItems) {
-                  return 'TIMELINE POINT: ' + tooltipItems[0].label;
-                },
-              },
-            },
-          },
-          scales: {
-            y: {
-              beginAtZero: true,
-              ticks: {
-                font: {
-                  family: "'B612 Mono', monospace",
-                  size: 10,
-                },
-                color: '#794B28',
-              },
-              grid: {
-                color: 'rgba(121, 75, 40, 0.15)',
-                drawBorder: false,
-              },
-              title: {
-                display: true,
-                text: 'TIMELINE MAGNITUDE',
-                font: {
-                  family: "'B612 Mono', monospace",
-                  size: 10,
-                  weight: 'bold',
-                },
-                color: '#794B28',
-              },
-            },
-            x: {
-              grid: {
-                color: 'rgba(121, 75, 40, 0.1)',
-                drawBorder: false,
-              },
-              ticks: {
-                font: {
-                  family: "'B612 Mono', monospace",
-                  size: 10,
-                },
-                color: '#794B28',
-              },
-              title: {
-                display: true,
-                text: 'TEMPORAL COORDINATES',
-                font: {
-                  family: "'B612 Mono', monospace",
-                  size: 10,
-                  weight: 'bold',
-                },
-                color: '#794B28',
-              },
-            },
-          },
-          elements: {
-            line: {
-              borderWidth: 3,
-              borderCapStyle: 'round',
-            },
-            point: {
-              hitRadius: 10,
-              hoverRadius: 8,
-              hoverBorderWidth: 2,
-            },
-          },
+          options: options,
         },
       });
 
-      // Add chart annotation to simulate the "red line" in TVA animations
-      const timelineDivider = document.createElement('div');
-      timelineDivider.className = 'timeline-divider';
-      document.querySelector('.chart-container').appendChild(timelineDivider);
+      // Also update the chart container CSS
+      const chartContainer = document.querySelector('.chart-container');
+      if (chartContainer) {
+        if (this.currentTheme === 'tva') {
+          chartContainer.style.backgroundColor = '#1A1512'; // Dark background for TVA theme
+          chartContainer.style.border = '1px solid #794B28';
+        } else {
+          chartContainer.style.backgroundColor = '#051826'; // Dark for cockpit theme
+          chartContainer.style.border = '1px solid #38bdf8';
+        }
+      }
+
+      // Add chart annotation line
+      try {
+        if (chartContainer) {
+          // Remove existing timeline divider if any
+          const existingDivider =
+            chartContainer.querySelector('.timeline-divider');
+          if (existingDivider) {
+            existingDivider.remove();
+          }
+
+          const timelineDivider = document.createElement('div');
+          timelineDivider.className = 'timeline-divider';
+          chartContainer.appendChild(timelineDivider);
+        }
+      } catch (e) {
+        console.error('Could not add timeline divider:', e);
+      }
     },
 
     async fetchData() {

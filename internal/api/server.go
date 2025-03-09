@@ -57,10 +57,7 @@ type APIServer struct {
 }
 
 func NewAPIServer(dnsServer *dns.Server, port int) (*APIServer, error) {
-	tmpl, err := template.ParseFS(templateFS, "templates/*.html")
-	if err != nil {
-		return nil, err
-	}
+	tmpl := InitTemplates()
 
 	server := &APIServer{
 		dnsServer:     dnsServer,
@@ -79,6 +76,19 @@ func NewAPIServer(dnsServer *dns.Server, port int) (*APIServer, error) {
 	ServeStaticFiles(server.router)
 
 	return server, nil
+}
+
+// In your API server code
+func InitTemplates() *template.Template {
+	tmpl := template.New("")
+
+	// Parse sidebar template first to make it available to other templates
+	template.Must(tmpl.ParseFS(embeddedFiles, "templates/sidebar.html"))
+
+	// Then parse all remaining templates
+	template.Must(tmpl.ParseFS(embeddedFiles, "templates/*.html"))
+
+	return tmpl
 }
 
 // Add method to track queries
