@@ -1,5 +1,9 @@
 <div align="center">
-<p><strong>A powerful DNS-based ad blocker with a stylish dual-themed dashboard</strong></p>
+<p><strong>A DNS-based ad blocker with a stylish dual-themed dashboard</strong></p>
+</div>
+
+<div align="center">
+<p><em>⚠️ This is a work in progress application and may contain bugs or incomplete features ⚠️</em></p>
 </div>
 
 GoAdBlock is a lightweight, high-performance DNS-based ad blocker written in Go. It intercepts DNS queries for known advertising and tracking domains and prevents them from resolving, effectively blocking ads at the network level before they're downloaded.
@@ -55,6 +59,8 @@ docker run -p 53:53/udp -p 8080:8080 goadblock
 
 ## ⚙️ Configuration
 
+> ⚠️ **TODO**: This section needs to be completed/reviewed
+
 GoAdBlock can be configured using flags or a configuration file:
 
 ```sh
@@ -103,7 +109,7 @@ blocklists:
 ```
 /
 ├── cmd/
-│   └── goadblock/          # Application entry point
+│   └── server/          # Application entry point
 ├── internal/
 │   ├── api/                # Web API and dashboard
 │   │   ├── static/         # Static assets (JS, CSS)
