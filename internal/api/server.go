@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"html/template"
+	"io/fs"
+	"log"
 	"net/http"
 	"sort"
 	"sync"
@@ -72,6 +74,9 @@ func NewAPIServer(dnsServer *dns.Server, port int) (*APIServer, error) {
 
 	// Call setupRoutes to register all routes
 	server.setupRoutes()
+
+	// Set up static file serving from embedded files
+	ServeStaticFiles(server.router)
 
 	return server, nil
 }
@@ -206,7 +211,23 @@ func (s *APIServer) Start() error {
 }
 
 func (s *APIServer) setupRoutes() {
-	// Static routes
+	// Add this debug handler first to log incoming requests
+	s.router.Use(func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			log.Printf("Request: %s %s", r.Method, r.URL.Path)
+			next.ServeHTTP(w, r)
+		})
+	})
+
+	// IMPORTANT: Register static file handler BEFORE other routes
+	staticFS, err := fs.Sub(embeddedFiles, "static")
+	if err != nil {
+		log.Fatalf("Failed to create sub-filesystem for static files: %v", err)
+	}
+	fileServer := http.FileServer(http.FS(staticFS))
+	s.router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fileServer))
+
+	// Then add your API and other routes
 	s.router.HandleFunc("/", s.handleDashboard).Methods("GET")
 	s.router.HandleFunc("/blocklists", s.handleBlocklistsPage).Methods("GET")
 	s.router.HandleFunc("/settings", s.handleSettingsPage).Methods("GET")
@@ -233,6 +254,10 @@ func (s *APIServer) setupRoutes() {
 	s.router.HandleFunc("/api/v1/regex", s.handleGetRegexPatterns).Methods("GET")
 	s.router.HandleFunc("/api/v1/regex", s.handleAddRegexPattern).Methods("POST")
 	s.router.HandleFunc("/api/v1/regex", s.handleRemoveRegexPattern).Methods("DELETE")
+
+	// Add static file serving
+	fs := http.FileServer(http.Dir("./internal/api/static"))
+	s.router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fs))
 }
 
 func (s *APIServer) Shutdown(ctx context.Context) error {
