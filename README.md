@@ -100,7 +100,7 @@ blocklists:
 3. Access the dashboard at http://<goadblock-ip>:8080
 4. Toggle between themes using the theme switcher in the sidebar
 5. Monitor blocking performance through the visual dashboard
-6. Customize blocklists in the settings section
+<!-- 6. Customize blocklists in the settings section -->
 
 ## 🛠️ Development
 
@@ -121,7 +121,7 @@ blocklists:
 └── pkg/                    # Public packages
 ```
 
-### Building for Development
+<!-- ### Building for Development
 
 ```sh
 # Run with hot reload
@@ -129,7 +129,7 @@ air -c .air.toml
 
 # Build with debugging symbols
 go build -gcflags=all="-N -l" -o goadblock ./cmd/goadblock
-```
+``` -->
 
 ## 🤝 Contributing
 
