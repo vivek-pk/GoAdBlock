@@ -14,30 +14,11 @@
       href="https://fonts.googleapis.com/css2?family=B612+Mono:wght@400;700&family=DM+Serif+Display:ital@0;1&family=Space+Mono:wght@400;700&display=swap"
       rel="stylesheet"
     />
-
-    <script>
-      tailwind.config = {
-        theme: {
-          extend: {
-            colors: {
-              'tva': {
-                'amber': '#FF8B28',
-                'orange': '#FF6B00',
-                'brown': '#794B28',
-                'dark': '#251F17',
-                'tan': '#D6BC97',
-                'cream': '#F5E9D7',
-                'black': '#1A1512',
-              },
-            },
-            fontFamily: {
-              'serif': ['"DM Serif Display"', 'serif'],
-              'mono': ['"B612 Mono"', 'monospace'],
-            },
-          },
-        },
-      };
-    </script>
+    <!-- Add this font for cockpit theme -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
 
     <style>
       /* CRT screen effect - maintain scanlines but remove harsh flickering */
@@ -76,7 +57,7 @@
         background: radial-gradient(
           circle at center,
           transparent 60%,
-          rgba(255, 107, 0, 0.06) 100%
+          rgba(255, 107, 0, 0.09) 100%
         );
         pointer-events: none;
         z-index: 50;
@@ -212,12 +193,12 @@
       }
 
       body {
-        background-color: #251f17;
+        background-color: #1a1512; /* Darker than the previous #251f17 */
         background-image: linear-gradient(
-            rgba(255, 107, 0, 0.05) 1px,
-            transparent 1px
+            rgba(255, 107, 0, 0.07) 1px,
+            /* Slightly increased grid opacity for visibility */ transparent 1px
           ),
-          linear-gradient(90deg, rgba(255, 107, 0, 0.05) 1px, transparent 1px);
+          linear-gradient(90deg, rgba(255, 107, 0, 0.07) 1px, transparent 1px);
         background-size: 20px 20px;
       }
 
@@ -281,198 +262,541 @@
         );
         pointer-events: none;
       }
+
+      /* Theme base classes */
+      body {
+        transition: background-color 0.5s ease;
+      }
+
+      /* TVA Theme (Default) */
+      body.theme-tva {
+        background-color: #1a1512;
+        background-image: linear-gradient(
+            rgba(255, 107, 0, 0.07) 1px,
+            transparent 1px
+          ),
+          linear-gradient(90deg, rgba(255, 107, 0, 0.07) 1px, transparent 1px);
+        background-size: 20px 20px;
+      }
+
+      /* Cockpit Theme */
+      body.theme-cockpit {
+        background-color: #0a0e17;
+        background-image: radial-gradient(
+            circle at center,
+            rgba(16, 185, 129, 0.05) 0%,
+            transparent 80%
+          ),
+          linear-gradient(rgba(16, 185, 129, 0.05) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(16, 185, 129, 0.05) 1px, transparent 1px);
+        background-size: 100% 100%, 20px 20px, 20px 20px;
+      }
+
+      /* Cockpit Theme Adjustments */
+      .theme-cockpit .file-folder {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid #10b981;
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.2);
+      }
+
+      .theme-cockpit .file-tab {
+        background: rgba(16, 185, 129, 0.1);
+        border: 1px solid #10b981;
+      }
+
+      .theme-cockpit .monitor-glow {
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.3),
+          0 0 20px rgba(16, 185, 129, 0.1),
+          inset 0 0 30px rgba(16, 185, 129, 0.1);
+      }
+
+      .theme-cockpit .text-tva-tan {
+        color: #e0f2f1;
+      }
+
+      .theme-cockpit .text-tva-amber {
+        color: #38bdf8;
+      }
+
+      .theme-cockpit .text-tva-orange {
+        color: #10b981;
+      }
+
+      .theme-cockpit .border-tva-orange {
+        border-color: #10b981;
+      }
+
+      .theme-cockpit .border-tva-brown {
+        border-color: #0284c7;
+      }
+
+      .theme-cockpit .bg-tva-cream {
+        background-color: rgba(10, 14, 23, 0.8);
+      }
+
+      .theme-cockpit .bg-tva-dark {
+        background-color: #0a0e17;
+      }
+
+      .theme-cockpit .bg-tva-black\\/30 {
+        background-color: rgba(16, 185, 129, 0.1);
+      }
+
+      .theme-cockpit .bg-tva-tan {
+        background-color: rgba(16, 185, 129, 0.2);
+      }
+
+      .theme-cockpit .bg-tva-brown {
+        background-color: #0f766e;
+      }
+
+      .theme-cockpit .text-tva-dark {
+        color: #e0f2f1;
+      }
+
+      .theme-cockpit .miss-minutes-dot {
+        color: #38bdf8;
+      }
+
+      /* Radar animation for cockpit theme */
+      .theme-cockpit .chart-container::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 150%;
+        height: 150%;
+        background: conic-gradient(
+          rgba(16, 185, 129, 0.3) 0deg,
+          rgba(16, 185, 129, 0.1) 30deg,
+          transparent 60deg,
+          transparent 360deg
+        );
+        z-index: 2;
+        opacity: 0.7;
+        pointer-events: none;
+        animation: radar-sweep 4s linear infinite;
+        transform-origin: center;
+      }
+
+      @keyframes radar-sweep {
+        from {
+          transform: translate(-50%, -50%) rotate(0deg);
+        }
+        to {
+          transform: translate(-50%, -50%) rotate(360deg);
+        }
+      }
+
+      /* Cockpit timeline divider style */
+      .theme-cockpit .timeline-divider {
+        background-color: rgba(16, 185, 129, 0.7);
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+      }
+
+      @keyframes timeline-pulse-cockpit {
+        0%,
+        100% {
+          opacity: 1;
+          box-shadow: 0 0 10px rgba(16, 185, 129, 0.5);
+        }
+        50% {
+          opacity: 0.6;
+          box-shadow: 0 0 15px rgba(16, 185, 129, 0.7);
+        }
+      }
+
+      .theme-cockpit .timeline-divider {
+        animation: timeline-pulse-cockpit 2s infinite;
+      }
+
+      /* Theme transition effect */
+      .theme-transitioning {
+        opacity: 0;
+        transition: opacity 0.4s ease;
+      }
+
+      body {
+        transition: opacity 0.4s ease, background-color 0.5s ease;
+      }
+
+      /* More dramatic cockpit theme adjustments */
+      .theme-cockpit {
+        background-color: #0a1020;
+        background-image: linear-gradient(
+            rgba(16, 185, 129, 0.03) 1px,
+            transparent 1px
+          ),
+          linear-gradient(90deg, rgba(16, 185, 129, 0.03) 1px, transparent 1px);
+        background-size: 20px 20px;
+        font-family: 'B612 Mono', 'Roboto Mono', monospace;
+      }
+
+      /* Complete sidebar transformation for cockpit theme */
+      .theme-cockpit .sidebar-tva {
+        display: none !important;
+      }
+
+      .theme-cockpit .sidebar-cockpit {
+        display: flex !important;
+      }
+
+      .theme-cockpit .header-tva {
+        display: none !important;
+      }
+
+      .theme-cockpit .header-cockpit {
+        display: flex !important;
+      }
+
+      /* Card transformations */
+      .theme-cockpit .file-folder {
+        background: rgba(10, 16, 32, 0.8);
+        border: 1px solid #38bdf8;
+        border-radius: 10px;
+        box-shadow: 0 0 15px rgba(56, 189, 248, 0.2),
+          inset 0 0 20px rgba(16, 185, 129, 0.1);
+      }
+
+      .theme-cockpit .file-tab {
+        display: none;
+      }
+
+      /* Completely hide TVA-specific elements */
+      .theme-cockpit .tva-only {
+        display: none !important;
+      }
+
+      /* Show cockpit-specific elements */
+      .cockpit-only {
+        display: none !important; /* Use !important to ensure it's hidden initially */
+      }
+
+      .theme-cockpit .cockpit-only {
+        display: block !important; /* Use !important to override previous rule */
+      }
+
+      /* Special case for flex elements */
+      .theme-cockpit .cockpit-only.flex,
+      .theme-cockpit .header-cockpit {
+        display: flex !important;
+      }
+
+      /* Cockpit instrumentation styling */
+      .theme-cockpit .cockpit-gauge {
+        position: relative;
+        width: 100%;
+        height: 120px;
+        background: #0a1020;
+        border-radius: 10px;
+        border: 1px solid #38bdf8;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+      }
+
+      .theme-cockpit .cockpit-gauge::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: radial-gradient(
+          circle at center,
+          rgba(16, 185, 129, 0.15) 0%,
+          transparent 70%
+        );
+        pointer-events: none;
+      }
+
+      .theme-cockpit .gauge-value {
+        font-size: 2rem;
+        font-weight: bold;
+        color: #38bdf8;
+        text-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+        z-index: 1;
+        font-family: 'Orbitron', sans-serif;
+        letter-spacing: 1px;
+      }
+
+      .theme-cockpit .gauge-label {
+        text-transform: uppercase;
+        font-size: 0.7rem;
+        color: #10b981;
+        margin-top: 8px;
+        font-weight: bold;
+        letter-spacing: 2px;
+      }
+
+      /* Cockpit tables */
+      .theme-cockpit table {
+        background-color: rgba(10, 16, 32, 0.8);
+        border-collapse: separate;
+        border-spacing: 0;
+        border: 1px solid #38bdf8;
+      }
+
+      .theme-cockpit thead th {
+        background-color: #072d3a;
+        color: #38bdf8;
+        font-size: 0.7rem;
+        letter-spacing: 1px;
+        text-transform: uppercase;
+        padding: 0.75rem 1rem;
+        border-bottom: 1px solid #10b981;
+      }
+
+      .theme-cockpit tbody td {
+        color: #e0f2f1;
+        border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+        padding: 0.75rem 1rem;
+      }
+
+      .theme-cockpit tbody tr:hover {
+        background-color: rgba(16, 185, 129, 0.1);
+      }
+
+      /* Cockpit digital time */
+      .theme-cockpit .digital-clock {
+        font-family: 'Orbitron', sans-serif;
+        background: #051826;
+        color: #10b981;
+        padding: 0.5rem;
+        border-radius: 4px;
+        text-align: center;
+        letter-spacing: 2px;
+        border: 1px solid #38bdf8;
+        box-shadow: 0 0 10px rgba(56, 189, 248, 0.3);
+        animation: cockpit-pulse 3s infinite;
+      }
+
+      /* Blinking indicators */
+      @keyframes cockpit-blink {
+        0%,
+        49% {
+          opacity: 1;
+        }
+        50%,
+        100% {
+          opacity: 0.3;
+        }
+      }
+
+      .theme-cockpit .blink-slow {
+        animation: cockpit-blink 2s infinite;
+      }
+
+      /* HUD screen styling */
+      .theme-cockpit .hud-screen {
+        background-color: rgba(10, 20, 30, 0.9);
+        border: 1px solid #38bdf8;
+        border-radius: 8px;
+        padding: 1rem;
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.2),
+          inset 0 0 40px rgba(16, 185, 129, 0.05);
+      }
+
+      .theme-cockpit .hud-screen::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          to bottom,
+          transparent,
+          rgba(16, 185, 129, 0.03) 50%,
+          transparent 51%,
+          transparent
+        );
+        background-size: 100% 6px;
+        pointer-events: none;
+        opacity: 0.7;
+        z-index: 5;
+      }
+
+      .theme-cockpit .hud-title {
+        color: #10b981;
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 2px;
+        font-weight: bold;
+        margin-bottom: 0.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .theme-cockpit .hud-title::after {
+        content: '';
+        display: block;
+        width: 8px;
+        height: 8px;
+        background-color: #38bdf8;
+        border-radius: 50%;
+        animation: cockpit-blink 1.5s infinite;
+      }
+
+      /* Cockpit navigation panel */
+      .theme-cockpit .cockpit-nav-button {
+        background: linear-gradient(to bottom, #072d3a 0%, #051826 100%);
+        border: 1px solid #38bdf8;
+        color: #10b981;
+        padding: 0.75rem 1rem;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        margin-bottom: 0.5rem;
+        transition: all 0.2s ease;
+        text-transform: uppercase;
+        font-size: 0.8rem;
+        letter-spacing: 1px;
+      }
+
+      .theme-cockpit .cockpit-nav-button:hover {
+        background: linear-gradient(to bottom, #0a3d4f 0%, #072d3a 100%);
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+      }
+
+      .theme-cockpit .cockpit-nav-button.active {
+        background: linear-gradient(to bottom, #0f766e 0%, #0a3d4f 100%);
+        box-shadow: 0 0 15px rgba(16, 185, 129, 0.3);
+        color: #e0f2f1;
+      }
+
+      /* Additional styles to enhance cockpit theme */
+      .theme-cockpit .bg-tva-cream {
+        background-color: rgba(
+          5,
+          15,
+          25,
+          0.9
+        ); /* Darker background for better contrast */
+      }
+
+      /* Improve table contrast */
+      .theme-cockpit table {
+        border: 1px solid #38bdf8;
+      }
+
+      .theme-cockpit tbody tr:hover {
+        background-color: rgba(16, 185, 129, 0.1);
+      }
+
+      /* Add some glowing effects to important elements */
+      .theme-cockpit .cockpit-gauge {
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.15);
+      }
+
+      /* Add scan line effect for cockpit screens */
+      .theme-cockpit .hud-screen::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(
+          to bottom,
+          transparent,
+          rgba(16, 185, 129, 0.03) 50%,
+          transparent 51%,
+          transparent
+        );
+        background-size: 100% 6px;
+        pointer-events: none;
+        opacity: 0.7;
+        z-index: 5;
+      }
+
+      /* Add a subtle pulse to important indicators */
+      @keyframes cockpit-pulse {
+        0%,
+        100% {
+          box-shadow: 0 0 10px rgba(16, 185, 129, 0.3);
+        }
+        50% {
+          box-shadow: 0 0 20px rgba(16, 185, 129, 0.5);
+        }
+      }
+
+      .theme-cockpit .digital-clock {
+        animation: cockpit-pulse 3s infinite;
+      }
+
+      /* Responsive improvements for cockpit theme */
+      @media (max-width: 768px) {
+        .theme-cockpit .cockpit-gauge {
+          height: 100px;
+        }
+
+        .theme-cockpit .gauge-value {
+          font-size: 1.6rem;
+        }
+
+        .theme-cockpit .gauge-label {
+          font-size: 0.6rem;
+        }
+
+        .theme-cockpit .hud-title {
+          font-size: 0.7rem;
+        }
+      }
+
+      /* For TVA theme chart container */
+      .theme-tva .chart-container {
+        position: relative;
+        background-color: #1a1512 !important;
+        border-radius: 4px;
+        border: 1px solid #794b28 !important;
+        box-shadow: 0 0 20px rgba(255, 107, 0, 0.1),
+          inset 0 0 30px rgba(121, 75, 40, 0.2);
+        padding: 10px;
+      }
+
+      /* For Cockpit theme chart container */
+      .theme-cockpit .chart-container {
+        position: relative;
+        background-color: #051826 !important;
+        border-radius: 4px;
+        border: 1px solid #38bdf8 !important;
+        box-shadow: 0 0 20px rgba(16, 185, 129, 0.2),
+          inset 0 0 30px rgba(16, 185, 129, 0.1);
+        padding: 10px;
+      }
+
+      /* Improve contrast for timeline divider on dark background */
+      .theme-tva .timeline-divider {
+        background-color: rgba(255, 107, 0, 0.8);
+        box-shadow: 0 0 15px rgba(255, 107, 0, 0.5);
+      }
+
+      /* Update background specifically for TVA chart card */
+      .theme-tva .bg-tva-cream .chart-container {
+        background-color: #1a1512 !important;
+      }
     </style>
   </head>
 
   <body class="font-mono text-tva-tan crt relative" x-data="dashboard()">
     <div class="min-h-screen flex">
-      <!-- TVA Sidebar -->
-      <div
-        class="bg-tva-dark border-r-2 border-tva-orange w-64 fixed h-full overflow-y-auto monitor-glow"
-      >
-        <div
-          class="p-4 flex items-center space-x-3 border-b-2 border-tva-brown"
-        >
-          <div
-            class="w-10 h-10 rounded-full bg-tva-amber flex items-center justify-center overflow-hidden"
-          >
-            <div class="w-8 h-8 relative">
-              <!-- Simple Miss Minutes inspired icon -->
-              <div
-                class="absolute inset-0 rounded-full border-4 border-tva-dark"
-              ></div>
-              <div
-                class="absolute inset-1 rounded-full bg-tva-orange miss-minutes-dot"
-              ></div>
-              <div
-                class="absolute top-[45%] left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-5 h-1 bg-tva-dark rounded"
-              ></div>
-              <div
-                class="absolute top-[25%] left-[25%] w-1 h-1 bg-tva-dark rounded-full"
-              ></div>
-              <div
-                class="absolute top-[25%] right-[25%] w-1 h-1 bg-tva-dark rounded-full"
-              ></div>
-            </div>
-          </div>
-          <div>
-            <h1 class="text-xl font-serif text-tva-amber tracking-wide">
-              TVA INTERFACE
-            </h1>
-            <p class="text-xs text-tva-tan opacity-70">TEMPORAL DEFENSE</p>
-          </div>
-        </div>
-
-        <div class="pt-6 pb-2 px-4">
-          <p
-            class="uppercase text-xs tracking-widest text-tva-orange opacity-80"
-          >
-            TIMELINE STATUS
-          </p>
-          <div
-            class="mt-2 px-2 py-2 bg-tva-black/30 rounded border border-tva-brown flex justify-between items-center"
-          >
-            <span class="text-sm">Sacred Timeline</span>
-            <div class="flex items-center space-x-2">
-              <div
-                class="w-2 h-2 rounded-full miss-minutes-dot"
-                :class="status === 'running' ? 'bg-tva-amber' : 'bg-red-500'"
-              ></div>
-              <span
-                class="text-xs uppercase font-mono"
-                :class="status === 'running' ? 'text-tva-amber' : 'text-red-500'"
-                x-text="status === 'running' ? 'PROTECTED' : 'BREACHED'"
-              ></span>
-            </div>
-          </div>
-        </div>
-
-        <div class="px-4 py-3">
-          <span class="text-xs text-tva-tan opacity-70 font-mono"
-            >Authorized Access Only</span
-          >
-          <div class="mt-1 w-full h-1 bg-tva-black overflow-hidden">
-            <div class="h-full bg-tva-orange" style="width: 73%"></div>
-          </div>
-        </div>
-
-        <nav class="mt-2">
-          <div class="px-4 py-2">
-            <p
-              class="uppercase text-xs tracking-widest text-tva-orange opacity-80 mb-2"
-            >
-              CONSOLE ACCESS
-            </p>
-
-            <a
-              href="/"
-              class="flex items-center space-x-3 px-3 py-2 rounded transition-colors duration-200 border"
-              :class="currentPage === 'dashboard' ? 'bg-tva-orange/20 border-tva-orange text-tva-amber' : 'border-transparent hover:bg-tva-orange/10 text-tva-tan'"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7m0 10a2 2 0 002 2h2a2 2 0 002-2V7a2 2 0 00-2-2h-2a2 2 0 00-2 2"
-                />
-              </svg>
-              <span>MAIN CONSOLE</span>
-            </a>
-
-            <a
-              href="/blocklists"
-              class="flex items-center space-x-3 px-3 py-2 rounded mt-2 transition-colors duration-200 border"
-              :class="currentPage === 'blocklists' ? 'bg-tva-orange/20 border-tva-orange text-tva-amber' : 'border-transparent hover:bg-tva-orange/10 text-tva-tan'"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4"
-                />
-              </svg>
-              <span>VARIANT FILES</span>
-            </a>
-
-            <a
-              href="/settings"
-              class="flex items-center space-x-3 px-3 py-2 rounded mt-2 transition-colors duration-200 border"
-              :class="currentPage === 'settings' ? 'bg-tva-orange/20 border-tva-orange text-tva-amber' : 'border-transparent hover:bg-tva-orange/10 text-tva-tan'"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
-                />
-              </svg>
-              <span>TEMPPAD CONFIG</span>
-            </a>
-
-            <a
-              href="/about"
-              class="flex items-center space-x-3 px-3 py-2 rounded mt-2 transition-colors duration-200 border"
-              :class="currentPage === 'about' ? 'bg-tva-orange/20 border-tva-orange text-tva-amber' : 'border-transparent hover:bg-tva-orange/10 text-tva-tan'"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                class="h-5 w-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
-              <span>TIME KEEPERS</span>
-            </a>
-          </div>
-        </nav>
-
-        <div
-          class="absolute bottom-0 left-0 right-0 p-4 border-t border-tva-brown"
-        >
-          <div class="text-xs font-mono">
-            <p class="text-center text-tva-orange">TIME VARIANCE AUTHORITY</p>
-            <div class="flex justify-center space-x-4 mt-2">
-              <div>V.1.0.3</div>
-              <div class="miss-minutes-dot text-tva-amber">●</div>
-              <div>FOR ALL TIME. ALWAYS.</div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <!-- Include the sidebar template -->
+      {{template "sidebar.html" .}}
 
       <!-- Main Content -->
       <main class="ml-64 flex-1 p-6 pb-24">
         <!-- Dashboard content (show when currentPage is dashboard) -->
         <div x-show="currentPage === 'dashboard'">
-          <header class="flex justify-between items-center mb-8">
+          <!-- TVA Header -->
+          <header
+            class="header-tva flex justify-between items-center mb-8"
+            x-show="currentTheme === 'tva'"
+          >
             <div>
               <h1 class="text-3xl font-serif text-tva-amber">
                 Variant Detection Center
@@ -498,6 +822,42 @@
             </div>
           </header>
 
+          <!-- Cockpit Header -->
+          <header
+            class="header-cockpit cockpit-only flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4"
+            x-show="currentTheme === 'cockpit'"
+          >
+            <div>
+              <h1
+                class="text-3xl font-['Orbitron'] text-[#38bdf8] tracking-wide"
+              >
+                Defense System
+              </h1>
+              <p class="text-sm text-[#10b981] mt-2 uppercase tracking-wider">
+                Active Surveillance: Monitor Alpha-3
+              </p>
+            </div>
+
+            <div class="flex space-x-4">
+              <div class="digital-clock">
+                <div class="text-xs mb-1">LOCAL TIME</div>
+                <div
+                  class="text-lg"
+                  x-text="new Date().toLocaleTimeString('en-US', {hour12: false})"
+                ></div>
+              </div>
+
+              <div class="digital-clock">
+                <div class="text-xs mb-1">STATUS</div>
+                <div
+                  class="text-lg"
+                  x-text="status === 'running' ? 'SHIELDED' : 'COMPROMISED'"
+                  :class="status === 'running' ? 'text-[#10b981]' : 'text-red-500'"
+                ></div>
+              </div>
+            </div>
+          </header>
+
           <!-- Timestamp -->
           <div class="flex justify-between items-center mb-6">
             <div
@@ -511,8 +871,10 @@
             </div>
           </div>
 
-          <!-- Stats Cards -->
-          <div class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
+          <!-- TVA Stats Cards (keep existing) -->
+          <div
+            class="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4 tva-only"
+          >
             <div class="file-folder overflow-hidden rounded">
               <div class="file-tab"></div>
               <div class="px-6 py-5">
@@ -646,6 +1008,34 @@
             </div>
           </div>
 
+          <!-- Cockpit Stats Displays -->
+          <div
+            class="cockpit-only grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4"
+          >
+            <div class="cockpit-gauge">
+              <div class="gauge-value" x-text="metrics.totalQueries"></div>
+              <div class="gauge-label">Total Requests</div>
+            </div>
+
+            <div class="cockpit-gauge">
+              <div class="gauge-value" x-text="metrics.blockedQueries"></div>
+              <div class="gauge-label">Threats Blocked</div>
+            </div>
+
+            <div class="cockpit-gauge">
+              <div class="gauge-value" x-text="metrics.cacheHits"></div>
+              <div class="gauge-label">Cache Retrieval</div>
+            </div>
+
+            <div class="cockpit-gauge">
+              <div
+                class="gauge-value"
+                x-text="metrics.totalQueries > 0 ? ((metrics.blockedQueries / metrics.totalQueries) * 100).toFixed(1) + '%' : '0%'"
+              ></div>
+              <div class="gauge-label">Protection Rate</div>
+            </div>
+          </div>
+
           <!-- Chart Section -->
           <div
             class="mt-8 bg-tva-cream rounded border-2 border-tva-brown monitor-glow"
@@ -668,10 +1058,21 @@
             </div>
           </div>
 
+          <!-- Chart Section for Cockpit -->
+          <div class="mt-8 hud-screen cockpit-only">
+            <div class="hud-title">
+              <span>THREAT DETECTION RADAR</span>
+            </div>
+            <div class="chart-container">
+              <canvas id="statsChart"></canvas>
+            </div>
+          </div>
+
+          <!-- Tables -->
           <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
             <!-- Variant registry table -->
             <div
-              class="bg-tva-cream rounded border-2 border-tva-brown monitor-glow"
+              class="bg-tva-cream rounded border-2 border-tva-brown monitor-glow tva-only"
             >
               <div class="bg-tva-brown text-tva-cream px-6 py-3">
                 <h2 class="text-lg font-serif">SUBJECT REGISTRY</h2>
@@ -738,7 +1139,7 @@
 
             <!-- Recent Variants -->
             <div
-              class="bg-tva-cream rounded border-2 border-tva-brown monitor-glow"
+              class="bg-tva-cream rounded border-2 border-tva-brown monitor-glow tva-only"
             >
               <div class="bg-tva-brown text-tva-cream px-6 py-3">
                 <h2 class="text-lg font-serif">NEXUS EVENT LOG</h2>
@@ -795,15 +1196,132 @@
                 </table>
               </div>
             </div>
+
+            <!-- Cockpit Tables -->
+            <div class="hud-screen cockpit-only">
+              <div class="hud-title">
+                <span>NETWORK SUBJECTS</span>
+              </div>
+              <div class="overflow-x-auto" style="max-height: 400px">
+                <table class="min-w-full">
+                  <thead>
+                    <tr>
+                      <th>IP ADDRESS</th>
+                      <th>REQUESTS</th>
+                      <th>BLOCKS</th>
+                      <th>LAST SEEN</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template x-for="client in clientStats" :key="client.ip">
+                      <tr>
+                        <td x-text="client.ip"></td>
+                        <td x-text="client.totalQueries"></td>
+                        <td x-text="client.blockedQueries"></td>
+                        <td x-text="client.lastSeen"></td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="hud-screen cockpit-only">
+              <div class="hud-title">
+                <span>SECURITY LOG</span>
+              </div>
+              <div class="overflow-x-auto" style="max-height: 400px">
+                <table class="min-w-full">
+                  <thead>
+                    <tr>
+                      <th>DOMAIN</th>
+                      <th>STATUS</th>
+                      <th>TIME</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <template x-for="query in recentQueries" :key="query.id">
+                      <tr>
+                        <td x-text="query.domain"></td>
+                        <td>
+                          <span
+                            class="px-2 py-1 text-xs uppercase"
+                            :class="query.blocked ? 'bg-red-900/30 text-red-400' : 'bg-emerald-900/30 text-emerald-400'"
+                            x-text="query.blocked ? 'BLOCKED' : 'CLEARED'"
+                          ></span>
+                        </td>
+                        <td x-text="query.time"></td>
+                      </tr>
+                    </template>
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
 
           <!-- Footer -->
-          <footer class="mt-12 pb-6">
-            <div class="text-center text-xs text-tva-tan">
-              <p>
-                GoAdBlock Defense System • Operational Time:
-                <span x-text="getUptime()"></span>
-              </p>
+          <!-- TVA Footer (keep existing) -->
+          <footer
+            class="mt-12 pb-6 border-t border-tva-orange/20 pt-4 tva-only"
+          >
+            <div class="flex justify-center items-center space-x-4">
+              <div
+                class="bg-tva-black/30 border border-tva-orange/70 rounded px-4 py-2 monitor-glow"
+              >
+                <div class="flex items-center space-x-3">
+                  <div>
+                    <div class="text-xs font-mono text-tva-orange mb-1">
+                      SYSTEM OPERATIONAL TIME
+                    </div>
+                    <div class="flex items-center">
+                      <span
+                        class="font-mono text-tva-amber text-xl"
+                        x-text="formatUptime()"
+                      ></span>
+                      <span class="miss-minutes-dot text-tva-amber ml-2"
+                        >●</span
+                      >
+                    </div>
+                  </div>
+                  <div
+                    class="hidden sm:block border-l border-tva-orange/30 pl-3 h-12"
+                  >
+                    <div class="text-xs font-mono text-tva-orange mb-1">
+                      TIMELINE INTEGRITY
+                    </div>
+                    <div
+                      class="w-24 bg-tva-black/50 h-2 rounded-full overflow-hidden"
+                    >
+                      <div
+                        class="h-full bg-tva-orange"
+                        :style="`width: ${getUptimePercentage()}%`"
+                      ></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="hidden md:block text-center text-xs text-tva-tan">
+                <p>FOR ALL TIME. ALWAYS.</p>
+              </div>
+            </div>
+          </footer>
+
+          <!-- Cockpit Footer -->
+          <footer
+            class="mt-12 pb-6 border-t border-[#38bdf8]/20 pt-4 cockpit-only"
+          >
+            <div class="flex justify-center items-center space-x-4">
+              <div class="digital-clock">
+                <div class="text-xs mb-1">UPTIME</div>
+                <div class="text-lg" x-text="formatUptime()"></div>
+              </div>
+
+              <div class="hidden md:block text-center">
+                <div class="text-[#10b981] text-xs">
+                  SECURE FLIGHT PROTOCOL ACTIVE
+                </div>
+              </div>
             </div>
           </footer>
         </div>
@@ -837,308 +1355,14 @@
       </main>
     </div>
 
+    <!-- Make sure this path is correct -->
+    <script src="/static/js/dashboard.js"></script>
     <script>
-      // Update the dashboard function to handle navigation
-      function dashboard() {
-        let chart = null;
-        const startTime = new Date();
-
-        return {
-          status: 'running',
-          metrics: {
-            totalQueries: 0,
-            blockedQueries: 0,
-            cacheHits: 0,
-            cacheMisses: 0,
-          },
-          recentQueries: [],
-          hourlyStats: {
-            labels: [],
-            requests: [],
-            blocks: [],
-          },
-          clientStats: [],
-          currentPage: 'dashboard', // Default to dashboard
-
-          init() {
-            this.initChart();
-            this.fetchData();
-            // Update every 2 seconds
-            setInterval(() => this.fetchData(), 2000);
-
-            // Determine current page from URL
-            const path = window.location.pathname;
-            if (path.includes('/blocklists')) {
-              this.currentPage = 'blocklists';
-            } else if (path.includes('/settings')) {
-              this.currentPage = 'settings';
-            } else if (path.includes('/about')) {
-              this.currentPage = 'about';
-            } else {
-              this.currentPage = 'dashboard';
-            }
-          },
-
-          getUptime() {
-            const now = new Date();
-            const diff = now - startTime;
-            const hours = Math.floor(diff / 3600000);
-            const minutes = Math.floor((diff % 3600000) / 60000);
-            const seconds = Math.floor((diff % 60000) / 1000);
-            return `${hours.toString().padStart(2, '0')}:${minutes
-              .toString()
-              .padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-          },
-
-          initChart() {
-            const ctx = document.getElementById('statsChart').getContext('2d');
-
-            // Custom gradient for the sacred timeline
-            const sacredTimelineGradient = ctx.createLinearGradient(
-              0,
-              0,
-              0,
-              300
-            );
-            sacredTimelineGradient.addColorStop(0, 'rgba(255, 107, 0, 0.8)');
-            sacredTimelineGradient.addColorStop(1, 'rgba(255, 139, 40, 0.3)');
-
-            // Custom gradient for the variant timeline
-            const variantTimelineGradient = ctx.createLinearGradient(
-              0,
-              0,
-              0,
-              300
-            );
-            variantTimelineGradient.addColorStop(0, 'rgba(121, 75, 40, 0.8)');
-            variantTimelineGradient.addColorStop(1, 'rgba(121, 75, 40, 0.3)');
-
-            Chart.defaults.color = '#794B28';
-            Chart.defaults.font.family = "'B612 Mono', monospace";
-
-            chart = new Chart(ctx, {
-              type: 'line',
-              data: {
-                labels: [],
-                datasets: [
-                  {
-                    label: 'Sacred Timeline',
-                    borderColor: '#FF6B00',
-                    backgroundColor: sacredTimelineGradient,
-                    borderWidth: 3,
-                    pointBackgroundColor: '#FF6B00',
-                    pointBorderColor: '#1A1512',
-                    pointRadius: 6,
-                    pointHoverRadius: 8,
-                    data: [],
-                    fill: true,
-                    tension: 0.2,
-                    pointStyle: 'rectRot',
-                    borderDash: [],
-                  },
-                  {
-                    label: 'Variant Branches',
-                    borderColor: '#794B28',
-                    backgroundColor: variantTimelineGradient,
-                    borderWidth: 2,
-                    pointBackgroundColor: '#794B28',
-                    pointBorderColor: '#1A1512',
-                    pointRadius: 6,
-                    pointHoverRadius: 8,
-                    data: [],
-                    fill: true,
-                    tension: 0.2,
-                    borderDash: [5, 5],
-                    pointStyle: 'rectRot',
-                  },
-                ],
-              },
-              options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: {
-                  duration: 1500,
-                  easing: 'easeOutQuart',
-                },
-                plugins: {
-                  legend: {
-                    position: 'top',
-                    labels: {
-                      boxWidth: 15,
-                      usePointStyle: true,
-                      pointStyle: 'rectRot',
-                      padding: 20,
-                      font: {
-                        family: "'B612 Mono', monospace",
-                        size: 12,
-                      },
-                      color: '#794B28',
-                    },
-                  },
-                  tooltip: {
-                    backgroundColor: 'rgba(214, 188, 151, 0.9)',
-                    titleFont: {
-                      family: "'DM Serif Display', serif",
-                      size: 14,
-                      weight: 'bold',
-                    },
-                    bodyFont: {
-                      family: "'B612 Mono', monospace",
-                      size: 12,
-                    },
-                    borderColor: '#FF6B00',
-                    borderWidth: 2,
-                    titleColor: '#251F17',
-                    bodyColor: '#251F17',
-                    padding: 12,
-                    boxPadding: 5,
-                    displayColors: true,
-                    callbacks: {
-                      title: function (tooltipItems) {
-                        return 'TIMELINE POINT: ' + tooltipItems[0].label;
-                      },
-                    },
-                  },
-                },
-                scales: {
-                  y: {
-                    beginAtZero: true,
-                    ticks: {
-                      font: {
-                        family: "'B612 Mono', monospace",
-                        size: 10,
-                      },
-                      color: '#794B28',
-                    },
-                    grid: {
-                      color: 'rgba(121, 75, 40, 0.15)',
-                      drawBorder: false,
-                    },
-                    title: {
-                      display: true,
-                      text: 'TIMELINE MAGNITUDE',
-                      font: {
-                        family: "'B612 Mono', monospace",
-                        size: 10,
-                        weight: 'bold',
-                      },
-                      color: '#794B28',
-                    },
-                  },
-                  x: {
-                    grid: {
-                      color: 'rgba(121, 75, 40, 0.1)',
-                      drawBorder: false,
-                    },
-                    ticks: {
-                      font: {
-                        family: "'B612 Mono', monospace",
-                        size: 10,
-                      },
-                      color: '#794B28',
-                    },
-                    title: {
-                      display: true,
-                      text: 'TEMPORAL COORDINATES',
-                      font: {
-                        family: "'B612 Mono', monospace",
-                        size: 10,
-                        weight: 'bold',
-                      },
-                      color: '#794B28',
-                    },
-                  },
-                },
-                elements: {
-                  line: {
-                    borderWidth: 3,
-                    borderCapStyle: 'round',
-                  },
-                  point: {
-                    hitRadius: 10,
-                    hoverRadius: 8,
-                    hoverBorderWidth: 2,
-                  },
-                },
-              },
-            });
-
-            // Add chart annotation to simulate the "red line" in TVA animations
-            const timelineDivider = document.createElement('div');
-            timelineDivider.className = 'timeline-divider';
-            document
-              .querySelector('.chart-container')
-              .appendChild(timelineDivider);
-          },
-
-          async fetchData() {
-            try {
-              // Fetch metrics
-              const metricsResponse = await fetch('/api/v1/metrics');
-              if (!metricsResponse.ok) {
-                throw new Error('Metrics fetch failed');
-              }
-              const metricsData = await metricsResponse.json();
-
-              // Update metrics
-              this.metrics = {
-                totalQueries: metricsData.totalQueries || 0,
-                blockedQueries: metricsData.blockedQueries || 0,
-                cacheHits: metricsData.cacheHits || 0,
-                cacheMisses: metricsData.cacheMisses || 0,
-              };
-
-              // Fetch recent queries
-              const queriesResponse = await fetch('/api/v1/queries');
-              if (!queriesResponse.ok) {
-                throw new Error('Queries fetch failed');
-              }
-              const queriesData = await queriesResponse.json();
-              this.recentQueries = (queriesData.queries || []).map((q) => ({
-                ...q,
-                time: new Date(q.timestamp).toLocaleTimeString(),
-              }));
-
-              // Update status
-              const statusResponse = await fetch('/api/v1/status');
-              if (!statusResponse.ok) {
-                throw new Error('Status fetch failed');
-              }
-              const statusData = await statusResponse.json();
-              this.status = statusData.status;
-
-              // Fetch hourly stats
-              const statsResponse = await fetch('/api/v1/stats/hourly');
-              if (!statsResponse.ok) {
-                throw new Error('Hourly stats fetch failed');
-              }
-              const statsData = await statsResponse.json();
-
-              // Fetch client stats
-              const clientStatsResponse = await fetch('/api/v1/clients');
-              if (!clientStatsResponse.ok) {
-                throw new Error('Client stats fetch failed');
-              }
-              const clientStatsData = await clientStatsResponse.json();
-              this.clientStats = clientStatsData.clients.map((client) => ({
-                ...client,
-                lastSeen: new Date(client.lastSeen).toLocaleString(),
-              }));
-
-              // Update chart
-              if (chart) {
-                chart.data.labels = statsData.hours;
-                chart.data.datasets[0].data = statsData.requests;
-                chart.data.datasets[1].data = statsData.blocks;
-                chart.update();
-              }
-            } catch (error) {
-              console.error('Failed to fetch data:', error);
-              this.status = 'stopped';
-            }
-          },
-        };
-      }
+      document.addEventListener('DOMContentLoaded', function () {
+        // Check for saved theme
+        const savedTheme = localStorage.getItem('theme') || 'tva';
+        document.body.classList.add(`theme-${savedTheme}`);
+      });
     </script>
   </body>
 </html>
