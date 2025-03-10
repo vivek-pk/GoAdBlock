@@ -24,7 +24,7 @@ GoAdBlock is a lightweight, high-performance DNS-based ad blocker written in Go.
 
 <div align="center">
 <p><i>TVA Theme</i></p>
-![TVA Theme](https://github.com/vivek-pk/GoAdBlock/blob/main/images/tva.png?raw=true)
+(https://github.com/vivek-pk/GoAdBlock/blob/main/images/tva.png?raw=true)
 </div>
 
 ## 🚀 Installation
