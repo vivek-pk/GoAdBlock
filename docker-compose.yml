@@ -1,0 +1,9 @@
+version: "3"
+services:
+  adgoblock:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "53:53"
+      - "8080:8080"
