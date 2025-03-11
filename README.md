@@ -53,7 +53,7 @@ go build -o goadblock ./cmd/server/main.go
 <!-- ### Using Docker
 ```sh
 # Build the Docker image
-docker build -t goadblock .
+> ⚠️ **TODO**: Add docker build guilde 
 
 # Run the container
 docker run -p 53:53/udp -p 8080:8080 goadblock
