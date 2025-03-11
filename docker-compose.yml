@@ -4,6 +4,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        PLATFORM_VERSION: linux/amd64
     ports:
       - "53:53"
       - "8080:8080"
