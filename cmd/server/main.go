@@ -2,6 +2,8 @@ package main
 
 import (
 	"context"
+	"flag"
+	"fmt"
 	"log"
 	"os"
 	"os/signal"
@@ -13,7 +15,16 @@ import (
 	"github.com/vivek-pk/goadblock/internal/dns"
 )
 
+const (
+	DEFAULT_DNS_PORT = 53
+	HTTP_PORT        = 8080
+)
+
 func main() {
+	// init flag
+	dnsPort := flag.Int("dns-port", DEFAULT_DNS_PORT, "Port for the DNS server")
+	httpPort := flag.Int("http-port", HTTP_PORT, "Port for the HTTP server")
+
 	// Initialize ad blocker
 	adblocker := blocker.New()
 
@@ -51,7 +62,7 @@ func main() {
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	// Create API server first
-	apiServer, err := api.NewAPIServer(nil, 8080)
+	apiServer, err := api.NewAPIServer(nil, *httpPort)
 	if err != nil {
 		log.Fatalf("Failed to create API server: %v", err)
 	}
@@ -69,10 +80,10 @@ func main() {
 	apiServer.SetDNSServer(dnsServer)
 
 	// Start servers one by one
-	log.Println("Starting DNS server on :53")
+	log.Printf("Starting DNS server on :%d", dnsPort)
 	dnsErrChan := make(chan error, 1)
 	go func() {
-		if err := dnsServer.Start(":53"); err != nil {
+		if err := dnsServer.Start(fmt.Sprintf(":%d", dnsPort)); err != nil {
 			dnsErrChan <- err
 		}
 	}()
