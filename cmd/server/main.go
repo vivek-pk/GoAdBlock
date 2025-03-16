@@ -20,10 +20,25 @@ const (
 	HTTP_PORT        = 8080
 )
 
-func main() {
-	// init flag
+type Flags struct {
+	dnsPort  int
+	httpPort int
+}
+
+func initFlags() Flags {
 	dnsPort := flag.Int("dns-port", DEFAULT_DNS_PORT, "Port for the DNS server")
 	httpPort := flag.Int("http-port", HTTP_PORT, "Port for the HTTP server")
+	flag.Parse()
+	return Flags{
+		dnsPort:  *dnsPort,
+		httpPort: *httpPort,
+	}
+}
+
+func main() {
+	// TODO : Add Tech to read from env variables/config and merge values based on priority
+	flags := initFlags()
+	log.Printf("DnsPort %d, HttpPort %d", flags.dnsPort, flags.httpPort)
 
 	// Initialize ad blocker
 	adblocker := blocker.New()
@@ -62,7 +77,7 @@ func main() {
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	// Create API server first
-	apiServer, err := api.NewAPIServer(nil, *httpPort)
+	apiServer, err := api.NewAPIServer(nil, flags.httpPort)
 	if err != nil {
 		log.Fatalf("Failed to create API server: %v", err)
 	}
@@ -80,10 +95,10 @@ func main() {
 	apiServer.SetDNSServer(dnsServer)
 
 	// Start servers one by one
-	log.Printf("Starting DNS server on :%d", dnsPort)
+	log.Printf("Starting DNS server on :%d", flags.dnsPort)
 	dnsErrChan := make(chan error, 1)
 	go func() {
-		if err := dnsServer.Start(fmt.Sprintf(":%d", dnsPort)); err != nil {
+		if err := dnsServer.Start(fmt.Sprintf(":%d", flags.dnsPort)); err != nil {
 			dnsErrChan <- err
 		}
 	}()
