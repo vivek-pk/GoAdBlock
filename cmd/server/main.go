@@ -38,7 +38,6 @@ func initFlags() Flags {
 func main() {
 	// TODO : Add Tech to read from env variables/config and merge values based on priority
 	flags := initFlags()
-	log.Printf("DnsPort %d, HttpPort %d", flags.dnsPort, flags.httpPort)
 
 	// Initialize ad blocker
 	adblocker := blocker.New()
@@ -114,7 +113,7 @@ func main() {
 	}
 
 	// Now start the API server
-	log.Println("Starting API server on :8080")
+	log.Printf("Starting API server on :%d", flags.httpPort)
 	apiErrChan := make(chan error, 1)
 	go func() {
 		if err := apiServer.Start(); err != nil {
