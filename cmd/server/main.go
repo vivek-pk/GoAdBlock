@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"flag"
 	"fmt"
 	"log"
 	"os"
@@ -12,32 +11,17 @@ import (
 
 	"github.com/vivek-pk/goadblock/internal/api"
 	"github.com/vivek-pk/goadblock/internal/blocker"
+	"github.com/vivek-pk/goadblock/internal/config"
 	"github.com/vivek-pk/goadblock/internal/dns"
 )
 
-const (
-	DEFAULT_DNS_PORT = 53
-	HTTP_PORT        = 8080
-)
-
-type Flags struct {
-	dnsPort  int
-	httpPort int
-}
-
-func initFlags() Flags {
-	dnsPort := flag.Int("dns-port", DEFAULT_DNS_PORT, "Port for the DNS server")
-	httpPort := flag.Int("http-port", HTTP_PORT, "Port for the HTTP server")
-	flag.Parse()
-	return Flags{
-		dnsPort:  *dnsPort,
-		httpPort: *httpPort,
-	}
-}
-
 func main() {
 	// TODO : Add Tech to read from env variables/config and merge values based on priority
-	flags := initFlags()
+
+	configErr := config.InitConfig()
+	if configErr != nil {
+		log.Fatalf("Failed to load configs : %v", configErr)
+	}
 
 	// Initialize ad blocker
 	adblocker := blocker.New()
@@ -76,7 +60,7 @@ func main() {
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM)
 
 	// Create API server first
-	apiServer, err := api.NewAPIServer(nil, flags.httpPort)
+	apiServer, err := api.NewAPIServer(nil, config.GetHttpPort())
 	if err != nil {
 		log.Fatalf("Failed to create API server: %v", err)
 	}
@@ -94,10 +78,10 @@ func main() {
 	apiServer.SetDNSServer(dnsServer)
 
 	// Start servers one by one
-	log.Printf("Starting DNS server on :%d", flags.dnsPort)
+	log.Printf("Starting DNS server on :%d", config.GetDnsPort())
 	dnsErrChan := make(chan error, 1)
 	go func() {
-		if err := dnsServer.Start(fmt.Sprintf(":%d", flags.dnsPort)); err != nil {
+		if err := dnsServer.Start(fmt.Sprintf(":%d", config.GetDnsPort())); err != nil {
 			dnsErrChan <- err
 		}
 	}()
@@ -113,7 +97,7 @@ func main() {
 	}
 
 	// Now start the API server
-	log.Printf("Starting API server on :%d", flags.httpPort)
+	log.Printf("Starting API server on :%d", config.GetHttpPort())
 	apiErrChan := make(chan error, 1)
 	go func() {
 		if err := apiServer.Start(); err != nil {
