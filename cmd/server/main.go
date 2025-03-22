@@ -16,12 +16,13 @@ import (
 )
 
 func main() {
-	// TODO : Add Tech to read from env variables/config and merge values based on priority
-
 	configErr := config.InitConfig()
 	if configErr != nil {
 		log.Fatalf("Failed to load configs : %v", configErr)
 	}
+
+	log.Printf("Configuration loaded - Using DNS port: %d, HTTP port: %d",
+		config.GetDnsPort(), config.GetHttpPort())
 
 	// Initialize ad blocker
 	adblocker := blocker.New()

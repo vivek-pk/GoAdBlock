@@ -17,9 +17,8 @@ func InitConfig() error {
 	pflag.String("config", "", "Config file path")
 
 	pflag.Parse()
-	if err := viper.BindPFlags(pflag.CommandLine); err != nil {
-		return fmt.Errorf("error binding pflags: %w", err)
-	}
+
+	bindFlagsWithFormatting(pflag.CommandLine)
 
 	// Env
 	viper.SetEnvPrefix("GOADBLOCK")
@@ -46,19 +45,27 @@ func InitConfig() error {
 	}
 
 	// Default Values
-	viper.SetDefault("http-port", 8080)
-	viper.SetDefault("dns-port", 53)
+	viper.SetDefault("http.port", 8080)
+	viper.SetDefault("dns.port", 53)
 	viper.SetDefault("config", "")
 
 	return nil
 }
 
+func bindFlagsWithFormatting(flagSet *pflag.FlagSet) {
+	flagSet.VisitAll(func(flag *pflag.Flag) {
+		// Convert hyphen to dot notation for viper
+		name := strings.ReplaceAll(flag.Name, "-", ".")
+		viper.BindPFlag(name, flag)
+	})
+}
+
 func GetDnsPort() int {
-	return viper.GetInt("dns-port")
+	return viper.GetInt("dns.port")
 }
 
 func GetHttpPort() int {
-	return viper.GetInt("http-port")
+	return viper.GetInt("http.port")
 }
 
 func GetConfigPath() string {

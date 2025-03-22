@@ -52,9 +52,17 @@ func TestConfigFromEnvVars(t *testing.T) {
 
 func TestConfigFromConfigFile(t *testing.T) {
 	resetViper()
+	configContent := `dns:
+  port: 50
+  upstream: '8.8.8.8'
+  cache_size: 5000
+  cache_ttl: 3600
 
-	configContent := `dns-port: 50
-http-port: 5000`
+http:
+  port: 5000 
+  username: 'admin'
+  password: 'changeme'`
+
 	tmpfile, err := os.CreateTemp("", "config*.yaml")
 	assert.NoError(t, err, "Should create temp file")
 	defer os.Remove(tmpfile.Name())
@@ -85,8 +93,16 @@ func TestPriorityOrder(t *testing.T) {
 	os.Setenv("GOADBLOCK_HTTP_PORT", "3678")
 
 	//Config File
-	configContent := `dns-port: 50
-http-port: 5000`
+	configContent := `dns:
+  port: 50
+  upstream: '8.8.8.8'
+  cache_size: 5000
+  cache_ttl: 3600
+
+http:
+  port: 5000 
+  username: 'admin'
+  password: 'changeme'`
 	tmpfile, err := os.CreateTemp("", "config*.yaml")
 	assert.NoError(t, err, "Should create temp file")
 	defer os.Remove(tmpfile.Name())
