@@ -47,7 +47,7 @@ func InitConfig() error {
 
 	// Default Values
 	viper.SetDefault("http-port", 8080)
-	viper.SetDefault("dns-port", 5345)
+	viper.SetDefault("dns-port", 53)
 	viper.SetDefault("config", "")
 
 	return nil
