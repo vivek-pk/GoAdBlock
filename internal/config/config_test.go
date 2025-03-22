@@ -121,5 +121,5 @@ http:
 
 	os.Unsetenv("GOADBLOCK_DNS_PORT")
 	os.Unsetenv("GOADBLOCK_HTTP_PORT")
-	os.Setenv("GOADBLOCK_CONFIG", tmpfile.Name())
+	os.Unsetenv("GOADBLOCK_CONFIG")
 }
