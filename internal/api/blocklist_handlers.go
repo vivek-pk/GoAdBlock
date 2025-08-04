@@ -3,6 +3,8 @@ package api
 import (
 	"encoding/json"
 	"net/http"
+	
+	"github.com/vivek-pk/goadblock/internal/dbconfig"
 )
 
 type DomainRequest struct {
@@ -36,6 +38,20 @@ func (s *APIServer) handleAddDomainToBlocklist(w http.ResponseWriter, r *http.Re
 	}
 
 	s.dnsServer.GetBlocker().AddDomainToBlocklist(req.Domain, req.List)
+
+	// Save to DB
+	db, err := dbconfig.InitDB()
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	err = dbconfig.AddDomainToList(db, req.List, req.Domain)
+	if err != nil {
+		http.Error(w, "Failed to save domain to database", http.StatusInternalServerError)
+		return
+	}
 
 	w.WriteHeader(http.StatusCreated)
 }
@@ -84,6 +100,20 @@ func (s *APIServer) handleAddToWhitelist(w http.ResponseWriter, r *http.Request)
 
 	s.dnsServer.GetBlocker().AddToWhitelist(req.Domain)
 
+	// Save to DB
+	db, err := dbconfig.InitDB()
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	err = dbconfig.AddToWhitelist(db, req.Domain)
+	if err != nil {
+		http.Error(w, "Failed to save to whitelist database", http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(http.StatusCreated)
 }
 
@@ -101,6 +131,20 @@ func (s *APIServer) handleRemoveFromWhitelist(w http.ResponseWriter, r *http.Req
 	}
 
 	s.dnsServer.GetBlocker().RemoveFromWhitelist(req.Domain)
+
+	// Remove from DB
+	db, err := dbconfig.InitDB()
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	err = dbconfig.RemoveFromWhitelist(db, req.Domain)
+	if err != nil {
+		http.Error(w, "Failed to remove from whitelist database", http.StatusInternalServerError)
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 }
@@ -131,6 +175,20 @@ func (s *APIServer) handleAddRegexPattern(w http.ResponseWriter, r *http.Request
 		return
 	}
 
+	// Save to DB
+	db, err := dbconfig.InitDB()
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	err = dbconfig.AddRegexPattern(db, req.Pattern)
+	if err != nil {
+		http.Error(w, "Failed to save regex pattern to database", http.StatusInternalServerError)
+		return
+	}
+
 	w.WriteHeader(http.StatusCreated)
 }
 
@@ -148,6 +206,20 @@ func (s *APIServer) handleRemoveRegexPattern(w http.ResponseWriter, r *http.Requ
 	}
 
 	s.dnsServer.GetBlocker().RemoveBlockRegex(req.Pattern)
+
+	// Remove from DB
+	db, err := dbconfig.InitDB()
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	err = dbconfig.RemoveRegexPattern(db, req.Pattern)
+	if err != nil {
+		http.Error(w, "Failed to remove regex pattern from database", http.StatusInternalServerError)
+		return
+	}
 
 	w.WriteHeader(http.StatusOK)
 }

@@ -15,6 +15,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/gorilla/mux"
+	"github.com/vivek-pk/goadblock/internal/config"
+	"github.com/vivek-pk/goadblock/internal/dbconfig"
 	"github.com/vivek-pk/goadblock/internal/dns"
 )
 
@@ -265,6 +267,10 @@ func (s *APIServer) setupRoutes() {
 	s.router.HandleFunc("/api/v1/regex", s.handleAddRegexPattern).Methods("POST")
 	s.router.HandleFunc("/api/v1/regex", s.handleRemoveRegexPattern).Methods("DELETE")
 
+	// Configuration management routes
+	s.router.HandleFunc("/api/v1/config", s.handleGetConfig).Methods("GET")
+	s.router.HandleFunc("/api/v1/config", s.handleSaveConfig).Methods("POST")
+
 	// Add static file serving
 	fs := http.FileServer(http.Dir("./internal/api/static"))
 	s.router.PathPrefix("/static/").Handler(http.StripPrefix("/static/", fs))
@@ -303,6 +309,84 @@ func (s *APIServer) handleStatus(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(status)
 }
 
+// Configuration struct for JSON deserialization
+
+type ConfigUpdate struct {
+	DNSPort          int    `json:"dns_port"`
+	HTTPPort         int    `json:"http_port"`
+	CacheSize        int    `json:"cache_size"`
+	UpstreamServers  string `json:"upstream_servers"`
+}
+
+func (s *APIServer) handleGetConfig(w http.ResponseWriter, r *http.Request) {
+	configData := map[string]interface{}{
+		"dns_port":         config.GetDnsPort(),
+		"http_port":        config.GetHttpPort(),
+		"cache_size":       config.GetCacheSize(),
+		"upstream_servers": config.GetUpstreamServers(),
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(configData)
+}
+
+func (s *APIServer) handleSaveConfig(w http.ResponseWriter, r *http.Request) {
+	var confUpdate ConfigUpdate
+	if err := json.NewDecoder(r.Body).Decode(&confUpdate); err != nil {
+		log.Printf("Failed to decode configuration: %v", err)
+		http.Error(w, "Invalid request payload", http.StatusBadRequest)
+		return
+	}
+
+	// Save to DB
+	db, err := dbconfig.InitDB()
+	if err != nil {
+		http.Error(w, "Database error", http.StatusInternalServerError)
+		return
+	}
+	defer db.Close()
+
+	configChanges := map[string]interface{}{
+		"dns_port":        confUpdate.DNSPort,
+		"http_port":       confUpdate.HTTPPort,
+		"cache_size":      confUpdate.CacheSize,
+		"upstream_servers": confUpdate.UpstreamServers,
+	}
+
+	for key, value := range configChanges {
+		valueStr := fmt.Sprintf("%v", value)
+		if err := dbconfig.SetConfig(db, key, valueStr); err != nil {
+			http.Error(w, "Failed to save configuration", http.StatusInternalServerError)
+			return
+		}
+	}
+
+	// Hot-swap ports
+	if confUpdate.DNSPort != 0 {
+		s.dnsServer.Shutdown(context.Background())
+		newDNSServer := dns.NewServer(s.dnsServer.GetBlocker(), s, dns.ServerConfig{
+			UpstreamServers: config.GetUpstreamServers(),
+			BlockingMode:    "zero_ip",
+			BlockingIP:      "0.0.0.0",
+			CacheSize:       config.GetCacheSize(),
+		})
+
+		s.SetDNSServer(newDNSServer)
+
+		go func() {
+			if err := s.dnsServer.Start(fmt.Sprintf(":%d", confUpdate.DNSPort)); err != nil {
+				log.Fatalf("Failed to start DNS server: %v", err)
+			}
+			log.Println("DNS server restarted on new port")
+		}()
+	}
+
+	// Assume HTTP server restart handled elsewhere or not needed for port change
+
+	w.WriteHeader(http.StatusOK)
+	w.Write([]byte("Configuration updated successfully"))
+}
+
 // Add SetDNSServer method
 func (s *APIServer) SetDNSServer(server *dns.Server) {
 	s.dnsServer = server
@@ -310,13 +394,13 @@ func (s *APIServer) SetDNSServer(server *dns.Server) {
 
 // Add handler functions for each page
 func (s *APIServer) handleBlocklistsPage(w http.ResponseWriter, r *http.Request) {
-	s.templates.ExecuteTemplate(w, "blocklists.html", nil)
+	s.templates.ExecuteTemplate(w, "dashboard.html", nil)
 }
 
 func (s *APIServer) handleSettingsPage(w http.ResponseWriter, r *http.Request) {
-	s.templates.ExecuteTemplate(w, "settings.html", nil)
+	s.templates.ExecuteTemplate(w, "dashboard.html", nil)
 }
 
 func (s *APIServer) handleAboutPage(w http.ResponseWriter, r *http.Request) {
-	s.templates.ExecuteTemplate(w, "about.html", nil)
+	s.templates.ExecuteTemplate(w, "dashboard.html", nil)
 }

@@ -3,6 +3,7 @@ module github.com/vivek-pk/goadblock
 require (
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/mux v1.8.1
+	github.com/mattn/go-sqlite3 v1.14.30
 	github.com/miekg/dns v1.1.55
 	github.com/spf13/pflag v1.0.6
 	github.com/spf13/viper v1.20.0
