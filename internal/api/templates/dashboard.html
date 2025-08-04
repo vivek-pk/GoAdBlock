@@ -1337,21 +1337,61 @@
             <!-- Status indicator -->
           </header>
 
-          <!-- Blocklist content -->
-          <div class="bg-neo-dark neo-border neo-overlay rounded-lg p-6">
-            <!-- Table for blocklists -->
-          </div>
+<div class="bg-neo-dark neo-border neo-overlay rounded-lg p-6">
+  <!-- Table for blocklists -->
+  <table class="min-w-full divide-y divide-gray-200">
+    <thead class="bg-neo-light">
+      <tr>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;">
+          Domain
+        </th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;">
+          Status
+        </th>
+        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider;">
+          Actions
+        </th>
+      </tr>
+    </thead>
+    <tbody class="bg-neo-dark divide-y divide-gray-700">
+      <!-- Example row -->
+      <tr>
+        <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-tva-tan">
+          example.com
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-sm text-tva-tan">
+          Blocked
+        </td>
+        <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+          <a href="#" class="text-blue-600 hover:text-blue-900">Edit</a>
+        </td>
+      </tr>
+      <!-- More rows... -->
+    </tbody>
+  </table>
+</div>
         </div>
 
         <!-- Settings content (show when currentPage is settings) -->
         <div x-show="currentPage === 'settings'" x-cloak>
-          <!-- Settings content -->
+          {{template "settings.html" .}}
         </div>
 
-        <!-- About content (show when currentPage is about) -->
-        <div x-show="currentPage === 'about'" x-cloak>
-          <!-- About content -->
-        </div>
+<!-- About content (show when currentPage is about) -->
+<div x-show="currentPage === 'about'" x-cloak>
+  <header class="flex justify-between items-center mb-8 pb-4 border-b border-tva-orange/30">
+    <h1 class="text-2xl font-orbitron font-bold text-tva-amber">About</h1>
+  </header>
+  <div class="bg-tva-dark p-6 rounded-xl text-tva-tan">
+    <p class="text-sm mb-4">
+      Welcome to TVA's Temporal Defense System. This platform is designed to monitor and manage the integrity of timeline events and ensure consistent reality protocol adherence.
+    </p>
+    <p class="text-sm">
+      Version: 1.0.0<br>
+      Contact: support@temporaldefense.com
+    </p>
+  </div>
+</div>
       </main>
     </div>
 

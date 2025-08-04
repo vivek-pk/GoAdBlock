@@ -12,6 +12,7 @@ import (
 	"github.com/vivek-pk/goadblock/internal/api"
 	"github.com/vivek-pk/goadblock/internal/blocker"
 	"github.com/vivek-pk/goadblock/internal/config"
+	"github.com/vivek-pk/goadblock/internal/dbconfig"
 	"github.com/vivek-pk/goadblock/internal/dns"
 )
 
@@ -25,16 +26,40 @@ func main() {
 		config.GetDnsPort(), config.GetHttpPort())
 
 	// Initialize ad blocker
-	adblocker := blocker.New()
+db, err := dbconfig.InitDB()
+	if err != nil {
+		log.Fatalf("Failed to initialize database: %v", err)
+	}
+	defer db.Close()
 
-	// Load blocklists with debug info
-	log.Println("Loading blocklists...")
-	blocklists := map[string]string{
+	// Initialize default domain lists
+	defaultDomainLists := map[string]string{
 		"stevenblack": "https://raw.githubusercontent.com/StevenBlack/hosts/master/hosts",
 		"adaway":      "https://adaway.org/hosts.txt",
 	}
 
-	err := adblocker.LoadMultipleLists(blocklists)
+	for name, url := range defaultDomainLists {
+		err := dbconfig.SetConfig(db, name, url)
+		if err != nil {
+			log.Fatalf("Failed to set default domain list %s: %v", name, err)
+		}
+	}
+
+	adblocker := blocker.New()
+
+	// Load blocklists with debug info
+	log.Println("Loading blocklists from database...")
+
+	blocklists := make(map[string]string)
+	for name := range defaultDomainLists {
+		url, err := dbconfig.GetConfig(db, name)
+		if err != nil {
+			log.Fatalf("Failed to get domain list %s: %v", name, err)
+		}
+		blocklists[name] = url
+	}
+
+	err = adblocker.LoadMultipleLists(blocklists)
 	if err != nil {
 		log.Fatalf("Failed to load blocklists: %v", err)
 	}
@@ -68,10 +93,10 @@ func main() {
 
 	// Create DNS server with API notifier and config
 	dnsConfig := dns.ServerConfig{
-		UpstreamServers: []string{"8.8.8.8:53", "1.1.1.1:53"},
+		UpstreamServers: config.GetUpstreamServers(),
 		BlockingMode:    "zero_ip",
 		BlockingIP:      "0.0.0.0",
-		CacheSize:       10000,
+		CacheSize:       config.GetCacheSize(),
 	}
 	dnsServer := dns.NewServer(adblocker, apiServer, dnsConfig)
 

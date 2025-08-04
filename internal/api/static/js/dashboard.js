@@ -51,34 +51,21 @@ function dashboard() {
     currentPage: 'dashboard',
     currentTheme: savedTheme,
     uptimeTick: 0, // Property for Alpine to track
-
-    init() {
-      // Apply theme on initialization
-      this.applyTheme();
-
-      this.initChart();
-      this.fetchData();
-
-      // Update data every 2 seconds
-      setInterval(() => this.fetchData(), 2000);
-
-      // Add a dedicated timer for updating the uptime display every second
-      setInterval(() => {
-        this.uptimeTick++; // This will trigger Alpine to re-evaluate the formatUptime()
-      }, 1000);
-
-      // Determine current page from URL
-      const path = window.location.pathname;
-      if (path.includes('/blocklists')) {
-        this.currentPage = 'blocklists';
-      } else if (path.includes('/settings')) {
-        this.currentPage = 'settings';
-      } else if (path.includes('/about')) {
-        this.currentPage = 'about';
-      } else {
-        this.currentPage = 'dashboard';
-      }
-    },
+    
+    // Settings page data
+    newBlockDomain: '',
+    selectedBlocklist: 'custom',
+    blockDomains: [],
+    newWhitelistDomain: '',
+    whitelistDomains: [],
+    newRegexPattern: '',
+    regexPatterns: [],
+    dnsPort: 53,
+    httpPort: 8080,
+    upstreamServers: '8.8.8.8:53\n1.1.1.1:53',
+    cacheSize: 10000,
+    statusMessage: '',
+    statusType: 'success',
 
     toggleTheme() {
       // Change theme with transition
@@ -140,13 +127,166 @@ function dashboard() {
       return (minutesPassed / 60) * 100;
     },
 
+    addBlockDomain() {
+      if (this.newBlockDomain) {
+        this.blockDomains.push(this.newBlockDomain);
+        this.newBlockDomain = '';
+        this.showStatusMessage('Domain added to block list', 'success');
+      } else {
+        this.showStatusMessage('Please enter a domain', 'error');
+      }
+    },
+
+    removeBlockDomain(domain) {
+      this.blockDomains = this.blockDomains.filter(d => d !== domain);
+      this.statusMessage = 'Domain removed from block list';
+      this.statusType = 'success';
+    },
+
+    addWhitelistDomain() {
+      if (this.newWhitelistDomain) {
+        this.whitelistDomains.push(this.newWhitelistDomain);
+        this.newWhitelistDomain = '';
+        this.statusMessage = 'Domain added to whitelist';
+        this.statusType = 'success';
+      } else {
+        this.statusMessage = 'Please enter a domain';
+        this.statusType = 'error';
+      }
+    },
+
+    removeWhitelistDomain(domain) {
+      this.whitelistDomains = this.whitelistDomains.filter(d => d !== domain);
+      this.statusMessage = 'Domain removed from whitelist';
+      this.statusType = 'success';
+    },
+
+    addRegexPattern() {
+      if (this.newRegexPattern) {
+        this.regexPatterns.push(this.newRegexPattern);
+        this.newRegexPattern = '';
+        this.statusMessage = 'Regex pattern added';
+        this.statusType = 'success';
+      } else {
+        this.statusMessage = 'Please enter a regex pattern';
+        this.statusType = 'error';
+      }
+    },
+
+    removeRegexPattern(pattern) {
+      this.regexPatterns = this.regexPatterns.filter(p => p !== pattern);
+      this.statusMessage = 'Regex pattern removed';
+      this.statusType = 'success';
+    },
+
+    async saveConfiguration() {
+      const configData = {
+        dns_port: parseInt(this.dnsPort) || 53,
+        http_port: parseInt(this.httpPort) || 8080,
+        cache_size: parseInt(this.cacheSize) || 10000,
+        upstream_servers: this.upstreamServers || '8.8.8.8:53,1.1.1.1:53'
+      };
+
+      try {
+        const response = await fetch('/api/v1/config', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(configData)
+        });
+
+        if (response.ok) {
+          this.showStatusMessage('Configuration saved and applied successfully!', 'success');
+        } else {
+          this.showStatusMessage('Failed to save configuration', 'error');
+        }
+      } catch (error) {
+        console.error('Error saving configuration:', error);
+        this.showStatusMessage('Error saving configuration', 'error');
+      }
+    },
+
+    async loadConfiguration() {
+      try {
+        const response = await fetch('/api/v1/config');
+        if (response.ok) {
+          const config = await response.json();
+          console.log('Loaded config:', config); // Debug log
+          this.dnsPort = config.dns_port;
+          this.httpPort = config.http_port;
+          this.cacheSize = config.cache_size;
+          
+          // Handle upstream servers - convert array to newline-separated string for textarea
+          if (Array.isArray(config.upstream_servers)) {
+            this.upstreamServers = config.upstream_servers.join('\n');
+          } else {
+            this.upstreamServers = config.upstream_servers.replace(/,/g, '\n');
+          }
+          
+          console.log('Updated values:', {
+            dnsPort: this.dnsPort,
+            httpPort: this.httpPort,
+            cacheSize: this.cacheSize,
+            upstreamServers: this.upstreamServers
+          }); // Debug log
+        } else {
+          console.error('Failed to load configuration:', response.status, response.statusText);
+        }
+      } catch (error) {
+        console.error('Error loading configuration:', error);
+      }
+    },
+
+    showStatusMessage(message, type) {
+      this.statusMessage = message;
+      this.statusType = type;
+      // Clear message after 3 seconds
+      setTimeout(() => {
+        this.statusMessage = '';
+      }, 3000);
+    },
+
+    init() {
+      // Apply theme on initialization
+      this.applyTheme();
+
+      this.initChart();
+      this.fetchData();
+
+      // Update data every 2 seconds
+      setInterval(() => this.fetchData(), 2000);
+
+      // Add a dedicated timer for updating the uptime display every second
+      setInterval(() => {
+        this.uptimeTick++; // This will trigger Alpine to re-evaluate the formatUptime()
+      }, 1000);
+
+      // Determine current page from URL
+      const path = window.location.pathname;
+      console.log('Current path:', path); // Debug log
+      if (path === '/blocklists') {
+        this.currentPage = 'blocklists';
+      } else if (path === '/settings') {
+        this.currentPage = 'settings';
+        console.log('Settings page detected'); // Debug log
+        // Load configuration when on settings page
+        this.loadConfiguration();
+      } else if (path === '/about') {
+        this.currentPage = 'about';
+      } else {
+        this.currentPage = 'dashboard';
+      }
+      console.log('Current page set to:', this.currentPage); // Debug log
+    },
+
     initChart() {
       if (!window.Chart) {
         console.error('Chart.js not loaded');
         return;
       }
 
-      const ctx = document.getElementById('statsChart').getContext('2d');
+      const ctx = document.getElementById('statsChart')?.getContext('2d');
       if (!ctx) {
         console.error('Could not find stats chart context');
         return;

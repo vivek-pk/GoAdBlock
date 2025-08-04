@@ -1,0 +1,433 @@
+<!-- TVA Settings Configuration Template -->
+<div class="settings-container">
+  <!-- TVA Header -->
+  <header class="header-tva flex justify-between items-center mb-8" x-show="currentTheme === 'tva'">
+    <div>
+      <h1 class="text-3xl font-serif text-tva-amber">TemPad Configuration Center</h1>
+      <p class="text-sm text-tva-tan mt-1 opacity-70 font-mono">AUTHORIZED PERSONNEL ONLY - TEMPORAL MECHANICS DIVISION</p>
+    </div>
+    <div class="border border-tva-orange px-4 py-1 rounded bg-tva-black/30 monitor-glow">
+      <div class="text-xs text-tva-orange mb-1 font-mono">CONFIGURATION STATUS:</div>
+      <div class="flex items-center space-x-2">
+        <span class="text-tva-amber font-serif text-xl">ACTIVE</span>
+        <span class="miss-minutes-dot text-tva-amber text-lg">●</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Cockpit Header -->
+  <header class="header-cockpit cockpit-only flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4" x-show="currentTheme === 'cockpit'">
+    <div>
+      <h1 class="text-3xl font-['Orbitron'] text-[#38bdf8] tracking-wide">Flight Configuration</h1>
+      <p class="text-sm text-[#10b981] mt-2 uppercase tracking-wider">Defense Parameter Control Panel</p>
+    </div>
+    <div class="digital-clock">
+      <div class="text-xs mb-1">CONFIG STATUS</div>
+      <div class="text-lg text-[#10b981]">OPERATIONAL</div>
+    </div>
+  </header>
+
+  <!-- Main Settings Grid -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+    
+    <!-- Block Domain Management -->
+    <div class="file-folder overflow-hidden rounded tva-only">
+      <div class="file-tab"></div>
+      <div class="bg-tva-brown text-tva-cream px-6 py-3">
+        <h2 class="text-lg font-serif flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636" />
+          </svg>
+          VARIANT DOMAIN REGISTRY
+        </h2>
+      </div>
+      <div class="p-6">
+        <p class="text-sm text-tva-brown mb-4 font-mono">Domains flagged for timeline pruning</p>
+        
+        <!-- Add Domain Form -->
+        <div class="mb-6">
+          <div class="flex space-x-2">
+            <input x-model="newBlockDomain" type="text" 
+                   class="flex-1 px-3 py-2 bg-tva-dark border border-tva-brown rounded text-tva-tan placeholder-tva-tan/50 focus:border-tva-orange focus:outline-none" 
+                   placeholder="Enter domain to block (e.g., ads.example.com)">
+            <select x-model="selectedBlocklist" class="px-3 py-2 bg-tva-dark border border-tva-brown rounded text-tva-tan">
+              <option value="custom">Custom List</option>
+              <option value="stevenblack">StevenBlack</option>
+              <option value="adaway">AdAway</option>
+            </select>
+            <button @click="addBlockDomain()" 
+                    class="px-4 py-2 bg-tva-orange text-tva-black font-mono rounded hover:bg-tva-amber transition-colors">
+              PRUNE
+            </button>
+          </div>
+        </div>
+
+        <!-- Block Domain List -->
+        <div class="bg-tva-black/30 rounded border border-tva-brown max-h-60 overflow-y-auto">
+          <div class="p-3 border-b border-tva-brown bg-tva-tan">
+            <span class="text-xs font-mono text-tva-dark uppercase tracking-wider">Active Pruning Targets</span>
+          </div>
+          <div class="p-3">
+            <template x-for="domain in blockDomains" :key="domain">
+              <div class="flex items-center justify-between py-2 border-b border-tva-brown/20 last:border-b-0">
+                <span class="text-sm font-mono text-tva-tan" x-text="domain"></span>
+                <button @click="removeBlockDomain(domain)" 
+                        class="text-red-500 hover:text-red-400 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+            </template>
+            <div x-show="blockDomains.length === 0" class="text-center py-4 text-tva-tan/50">
+              No domains currently flagged for pruning
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cockpit Block Domain Management -->
+    <div class="hud-screen cockpit-only">
+      <div class="hud-title">
+        <span>THREAT DOMAIN DATABASE</span>
+      </div>
+      <div class="p-4">
+        <p class="text-sm text-[#10b981] mb-4 uppercase tracking-wider">Hostile domains under surveillance</p>
+        
+        <!-- Add Domain Form -->
+        <div class="mb-6">
+          <div class="flex space-x-2">
+            <input x-model="newBlockDomain" type="text" 
+                   class="flex-1 px-3 py-2 bg-[#0a1020] border border-[#38bdf8] rounded text-[#e0f2f1] placeholder-[#10b981]/50 focus:border-[#10b981] focus:outline-none" 
+                   placeholder="Target domain (e.g., threat.example.com)">
+            <select x-model="selectedBlocklist" class="px-3 py-2 bg-[#0a1020] border border-[#38bdf8] rounded text-[#e0f2f1]">
+              <option value="custom">Custom DB</option>
+              <option value="stevenblack">StevenBlack</option>
+              <option value="adaway">AdAway</option>
+            </select>
+            <button @click="addBlockDomain()" 
+                    class="px-4 py-2 bg-[#10b981] text-[#0a1020] font-mono rounded hover:bg-[#059669] transition-colors uppercase">
+              BLOCK
+            </button>
+          </div>
+        </div>
+
+        <!-- Block Domain List -->
+        <div class="bg-[#051826] rounded border border-[#38bdf8] max-h-60 overflow-y-auto">
+          <div class="p-3 border-b border-[#38bdf8] bg-[#072d3a]">
+            <span class="text-xs font-mono text-[#38bdf8] uppercase tracking-wider">Active Threat List</span>
+          </div>
+          <div class="p-3">
+            <template x-for="domain in blockDomains" :key="domain">
+              <div class="flex items-center justify-between py-2 border-b border-[#38bdf8]/20 last:border-b-0">
+                <span class="text-sm font-mono text-[#e0f2f1]" x-text="domain"></span>
+                <button @click="removeBlockDomain(domain)" 
+                        class="text-red-400 hover:text-red-300 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+            </template>
+            <div x-show="blockDomains.length === 0" class="text-center py-4 text-[#10b981]/50">
+              No hostile domains detected
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Whitelist Domain Management -->
+    <div class="file-folder overflow-hidden rounded tva-only">
+      <div class="file-tab"></div>
+      <div class="bg-tva-brown text-tva-cream px-6 py-3">
+        <h2 class="text-lg font-serif flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          SACRED TIMELINE REGISTRY
+        </h2>
+      </div>
+      <div class="p-6">
+        <p class="text-sm text-tva-brown mb-4 font-mono">Protected domains - exempt from pruning</p>
+        
+        <!-- Add Whitelist Domain Form -->
+        <div class="mb-6">
+          <div class="flex space-x-2">
+            <input x-model="newWhitelistDomain" type="text" 
+                   class="flex-1 px-3 py-2 bg-tva-dark border border-tva-brown rounded text-tva-tan placeholder-tva-tan/50 focus:border-tva-orange focus:outline-none" 
+                   placeholder="Enter domain to protect (e.g., important.example.com)">
+            <button @click="addWhitelistDomain()" 
+                    class="px-4 py-2 bg-green-600 text-white font-mono rounded hover:bg-green-500 transition-colors">
+              PROTECT
+            </button>
+          </div>
+        </div>
+
+        <!-- Whitelist Domain List -->
+        <div class="bg-tva-black/30 rounded border border-tva-brown max-h-60 overflow-y-auto">
+          <div class="p-3 border-b border-tva-brown bg-tva-tan">
+            <span class="text-xs font-mono text-tva-dark uppercase tracking-wider">Protected Timeline Branches</span>
+          </div>
+          <div class="p-3">
+            <template x-for="domain in whitelistDomains" :key="domain">
+              <div class="flex items-center justify-between py-2 border-b border-tva-brown/20 last:border-b-0">
+                <span class="text-sm font-mono text-tva-tan" x-text="domain"></span>
+                <button @click="removeWhitelistDomain(domain)" 
+                        class="text-red-500 hover:text-red-400 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+            </template>
+            <div x-show="whitelistDomains.length === 0" class="text-center py-4 text-tva-tan/50">
+              No domains currently under Sacred Timeline protection
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cockpit Whitelist Domain Management -->
+    <div class="hud-screen cockpit-only">
+      <div class="hud-title">
+        <span>SAFE ZONE DATABASE</span>
+      </div>
+      <div class="p-4">
+        <p class="text-sm text-[#10b981] mb-4 uppercase tracking-wider">Authorized domains - clearance granted</p>
+        
+        <!-- Add Whitelist Domain Form -->
+        <div class="mb-6">
+          <div class="flex space-x-2">
+            <input x-model="newWhitelistDomain" type="text" 
+                   class="flex-1 px-3 py-2 bg-[#0a1020] border border-[#38bdf8] rounded text-[#e0f2f1] placeholder-[#10b981]/50 focus:border-[#10b981] focus:outline-none" 
+                   placeholder="Authorized domain (e.g., safe.example.com)">
+            <button @click="addWhitelistDomain()" 
+                    class="px-4 py-2 bg-green-500 text-[#0a1020] font-mono rounded hover:bg-green-400 transition-colors uppercase">
+              CLEAR
+            </button>
+          </div>
+        </div>
+
+        <!-- Whitelist Domain List -->
+        <div class="bg-[#051826] rounded border border-[#38bdf8] max-h-60 overflow-y-auto">
+          <div class="p-3 border-b border-[#38bdf8] bg-[#072d3a]">
+            <span class="text-xs font-mono text-[#38bdf8] uppercase tracking-wider">Clearance Database</span>
+          </div>
+          <div class="p-3">
+            <template x-for="domain in whitelistDomains" :key="domain">
+              <div class="flex items-center justify-between py-2 border-b border-[#38bdf8]/20 last:border-b-0">
+                <span class="text-sm font-mono text-[#e0f2f1]" x-text="domain"></span>
+                <button @click="removeWhitelistDomain(domain)" 
+                        class="text-red-400 hover:text-red-300 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+            </template>
+            <div x-show="whitelistDomains.length === 0" class="text-center py-4 text-[#10b981]/50">
+              No domains in safe zone database
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Advanced Settings Section -->
+  <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
+    
+    <!-- Regex Patterns -->
+    <div class="file-folder overflow-hidden rounded tva-only">
+      <div class="file-tab"></div>
+      <div class="bg-tva-brown text-tva-cream px-6 py-3">
+        <h2 class="text-lg font-serif flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 20l4-16m2 16l4-16M6 9h14M4 15h14" />
+          </svg>
+          TEMPORAL PATTERN DETECTION
+        </h2>
+      </div>
+      <div class="p-6">
+        <p class="text-sm text-tva-brown mb-4 font-mono">Advanced pattern matching for variant detection</p>
+        
+        <!-- Add Regex Pattern Form -->
+        <div class="mb-6">
+          <div class="flex space-x-2">
+            <input x-model="newRegexPattern" type="text" 
+                   class="flex-1 px-3 py-2 bg-tva-dark border border-tva-brown rounded text-tva-tan placeholder-tva-tan/50 focus:border-tva-orange focus:outline-none font-mono" 
+                   placeholder="Enter regex pattern (e.g., ^ad[0-9]+\..*$)">
+            <button @click="addRegexPattern()" 
+                    class="px-4 py-2 bg-tva-orange text-tva-black font-mono rounded hover:bg-tva-amber transition-colors">
+              PATTERN
+            </button>
+          </div>
+        </div>
+
+        <!-- Regex Pattern List -->
+        <div class="bg-tva-black/30 rounded border border-tva-brown max-h-60 overflow-y-auto">
+          <div class="p-3 border-b border-tva-brown bg-tva-tan">
+            <span class="text-xs font-mono text-tva-dark uppercase tracking-wider">Active Detection Patterns</span>
+          </div>
+          <div class="p-3">
+            <template x-for="pattern in regexPatterns" :key="pattern">
+              <div class="flex items-center justify-between py-2 border-b border-tva-brown/20 last:border-b-0">
+                <span class="text-sm font-mono text-tva-tan break-all" x-text="pattern"></span>
+                <button @click="removeRegexPattern(pattern)" 
+                        class="text-red-500 hover:text-red-400 transition-colors ml-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+            </template>
+            <div x-show="regexPatterns.length === 0" class="text-center py-4 text-tva-tan/50">
+              No temporal patterns currently configured
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cockpit Regex Patterns -->
+    <div class="hud-screen cockpit-only">
+      <div class="hud-title">
+        <span>PATTERN RECOGNITION</span>
+      </div>
+      <div class="p-4">
+        <p class="text-sm text-[#10b981] mb-4 uppercase tracking-wider">Advanced threat pattern detection</p>
+        
+        <!-- Add Regex Pattern Form -->
+        <div class="mb-6">
+          <div class="flex space-x-2">
+            <input x-model="newRegexPattern" type="text" 
+                   class="flex-1 px-3 py-2 bg-[#0a1020] border border-[#38bdf8] rounded text-[#e0f2f1] placeholder-[#10b981]/50 focus:border-[#10b981] focus:outline-none font-mono" 
+                   placeholder="Pattern (e.g., ^ad[0-9]+\..*$)">
+            <button @click="addRegexPattern()" 
+                    class="px-4 py-2 bg-[#10b981] text-[#0a1020] font-mono rounded hover:bg-[#059669] transition-colors uppercase">
+              SCAN
+            </button>
+          </div>
+        </div>
+
+        <!-- Regex Pattern List -->
+        <div class="bg-[#051826] rounded border border-[#38bdf8] max-h-60 overflow-y-auto">
+          <div class="p-3 border-b border-[#38bdf8] bg-[#072d3a]">
+            <span class="text-xs font-mono text-[#38bdf8] uppercase tracking-wider">Active Scan Patterns</span>
+          </div>
+          <div class="p-3">
+            <template x-for="pattern in regexPatterns" :key="pattern">
+              <div class="flex items-center justify-between py-2 border-b border-[#38bdf8]/20 last:border-b-0">
+                <span class="text-sm font-mono text-[#e0f2f1] break-all" x-text="pattern"></span>
+                <button @click="removeRegexPattern(pattern)" 
+                        class="text-red-400 hover:text-red-300 transition-colors ml-2">
+                  <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                </button>
+              </div>
+            </template>
+            <div x-show="regexPatterns.length === 0" class="text-center py-4 text-[#10b981]/50">
+              No scan patterns configured
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- DNS Configuration -->
+    <div class="file-folder overflow-hidden rounded tva-only">
+      <div class="file-tab"></div>
+      <div class="bg-tva-brown text-tva-cream px-6 py-3">
+        <h2 class="text-lg font-serif flex items-center">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          </svg>
+          TEMPORAL CORE SETTINGS
+        </h2>
+      </div>
+      <div class="p-6">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-mono text-tva-brown mb-2">DNS Port Configuration</label>
+            <input x-model="dnsPort" type="number" 
+                   class="w-full px-3 py-2 bg-tva-dark border border-tva-brown rounded text-tva-tan focus:border-tva-orange focus:outline-none" 
+                   placeholder="53">
+          </div>
+          <div>
+            <label class="block text-sm font-mono text-tva-brown mb-2">HTTP Interface Port</label>
+            <input x-model="httpPort" type="number" 
+                   class="w-full px-3 py-2 bg-tva-dark border border-tva-brown rounded text-tva-tan focus:border-tva-orange focus:outline-none" 
+                   placeholder="8080">
+          </div>
+          <div>
+            <label class="block text-sm font-mono text-tva-brown mb-2">Upstream DNS Servers</label>
+            <textarea x-model="upstreamServers" rows="3" 
+                      class="w-full px-3 py-2 bg-tva-dark border border-tva-brown rounded text-tva-tan focus:border-tva-orange focus:outline-none" 
+                      placeholder="8.8.8.8:53&#10;1.1.1.1:53"></textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-mono text-tva-brown mb-2">Cache Size (entries)</label>
+            <input x-model="cacheSize" type="number" 
+                   class="w-full px-3 py-2 bg-tva-dark border border-tva-brown rounded text-tva-tan focus:border-tva-orange focus:outline-none" 
+                   placeholder="10000">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Cockpit DNS Configuration -->
+    <div class="hud-screen cockpit-only">
+      <div class="hud-title">
+        <span>SYSTEM CONFIGURATION</span>
+      </div>
+      <div class="p-4">
+        <div class="space-y-4">
+          <div>
+            <label class="block text-sm font-mono text-[#10b981] mb-2 uppercase tracking-wider">DNS Port</label>
+            <input x-model="dnsPort" type="number" 
+                   class="w-full px-3 py-2 bg-[#0a1020] border border-[#38bdf8] rounded text-[#e0f2f1] focus:border-[#10b981] focus:outline-none" 
+                   placeholder="53">
+          </div>
+          <div>
+            <label class="block text-sm font-mono text-[#10b981] mb-2 uppercase tracking-wider">Interface Port</label>
+            <input x-model="httpPort" type="number" 
+                   class="w-full px-3 py-2 bg-[#0a1020] border border-[#38bdf8] rounded text-[#e0f2f1] focus:border-[#10b981] focus:outline-none" 
+                   placeholder="8080">
+          </div>
+          <div>
+            <label class="block text-sm font-mono text-[#10b981] mb-2 uppercase tracking-wider">Upstream Servers</label>
+            <textarea x-model="upstreamServers" rows="3" 
+                      class="w-full px-3 py-2 bg-[#0a1020] border border-[#38bdf8] rounded text-[#e0f2f1] focus:border-[#10b981] focus:outline-none" 
+                      placeholder="8.8.8.8:53&#10;1.1.1.1:53"></textarea>
+          </div>
+          <div>
+            <label class="block text-sm font-mono text-[#10b981] mb-2 uppercase tracking-wider">Cache Size</label>
+            <input x-model="cacheSize" type="number" 
+                   class="w-full px-3 py-2 bg-[#0a1020] border border-[#38bdf8] rounded text-[#e0f2f1] focus:border-[#10b981] focus:outline-none" 
+                   placeholder="10000">
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Save Configuration Button -->
+  <div class="mt-8 flex justify-center">
+    <button @click="saveConfiguration()" 
+            class="px-8 py-3 font-serif text-lg rounded transition-all duration-300"
+            :class="currentTheme === 'tva' ? 'bg-tva-orange text-tva-black hover:bg-tva-amber monitor-glow' : 'bg-[#10b981] text-[#0a1020] hover:bg-[#059669] cockpit-pulse'">
+      <span x-text="currentTheme === 'tva' ? 'APPLY TEMPORAL CONFIGURATION' : 'ENGAGE DEFENSE PARAMETERS'"></span>
+    </button>
+  </div>
+
+  <!-- Status Messages -->
+  <div x-show="statusMessage" x-transition class="mt-4 p-4 rounded border" 
+       :class="statusType === 'success' ? (currentTheme === 'tva' ? 'bg-green-100 border-green-400 text-green-800' : 'bg-green-900/30 border-green-400 text-green-400') : (currentTheme === 'tva' ? 'bg-red-100 border-red-400 text-red-800' : 'bg-red-900/30 border-red-400 text-red-400')">
+    <p x-text="statusMessage"></p>
+  </div>
+</div>

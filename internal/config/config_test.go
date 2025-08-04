@@ -13,6 +13,14 @@ func resetViper() {
 	viper.Reset()
 	pflag.CommandLine = pflag.NewFlagSet(os.Args[0], pflag.ExitOnError)
 	os.Args = []string{"cmd"}
+
+	// Clean up database for tests
+	cleanupTestDB()
+}
+
+func cleanupTestDB() {
+	// Remove test database file if it exists
+	os.Remove("goadblock.db")
 }
 
 func TestConfigDefaults(t *testing.T) {

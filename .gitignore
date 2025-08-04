@@ -26,3 +26,4 @@ go.work.sum
 
 # Ignore the build folder
 build/
+goadblock
