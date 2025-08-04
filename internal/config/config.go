@@ -3,6 +3,7 @@ package config
 import (
 	"database/sql"
 	"fmt"
+	"os"
 	"strconv"
 	"strings"
 
@@ -24,9 +25,9 @@ func InitConfig() error {
 
 	// Set default configuration values in database if they don't exist
 	defaultConfigs := map[string]string{
-		"dns_port":    "53",
-		"http_port":   "8080",
-		"cache_size":  "10000",
+		"dns_port":         "53",
+		"http_port":        "8080",
+		"cache_size":       "10000",
 		"upstream_servers": "8.8.8.8:53,1.1.1.1:53",
 	}
 
@@ -83,25 +84,40 @@ func InitConfig() error {
 	viper.SetDefault("upstream.servers", "8.8.8.8:53,1.1.1.1:53")
 	viper.SetDefault("config", "")
 
-	// Load values from database and override defaults
+	// Load values from database only if not set by higher priority sources
+	// (flags, env vars, config file)
 	for key, _ := range defaultConfigs {
 		value, err := dbconfig.GetConfig(db, key)
 		if err == nil {
 			switch key {
 			case "dns_port":
-				if port, err := strconv.Atoi(value); err == nil {
-					viper.Set("dns.port", port)
+				// Only use database value if no flag was set, no env var, and not in config
+				if !pflag.Lookup("dns-port").Changed &&
+					os.Getenv("GOADBLOCK_DNS_PORT") == "" &&
+					viper.GetInt("dns.port") == 53 { // 53 is the default
+					if port, err := strconv.Atoi(value); err == nil {
+						viper.Set("dns.port", port)
+					}
 				}
 			case "http_port":
-				if port, err := strconv.Atoi(value); err == nil {
-					viper.Set("http.port", port)
+				// Only use database value if no flag was set, no env var, and not in config
+				if !pflag.Lookup("http-port").Changed &&
+					os.Getenv("GOADBLOCK_HTTP_PORT") == "" &&
+					viper.GetInt("http.port") == 8080 { // 8080 is the default
+					if port, err := strconv.Atoi(value); err == nil {
+						viper.Set("http.port", port)
+					}
 				}
 			case "cache_size":
-				if size, err := strconv.Atoi(value); err == nil {
-					viper.Set("cache.size", size)
+				if viper.GetInt("cache.size") == 10000 { // Only if still default
+					if size, err := strconv.Atoi(value); err == nil {
+						viper.Set("cache.size", size)
+					}
 				}
 			case "upstream_servers":
-				viper.Set("upstream.servers", value)
+				if viper.GetString("upstream.servers") == "8.8.8.8:53,1.1.1.1:53" { // Only if still default
+					viper.Set("upstream.servers", value)
+				}
 			}
 		}
 	}
@@ -118,44 +134,10 @@ func bindFlagsWithFormatting(flagSet *pflag.FlagSet) {
 }
 
 func GetDnsPort() int {
-	// Check if flag was explicitly set
-	if viper.IsSet("dns.port") && pflag.Lookup("dns-port").Changed {
-		return viper.GetInt("dns.port")
-	}
-	
-	// Otherwise read from database
-	db, err := dbconfig.InitDB()
-	if err == nil {
-		defer db.Close()
-		if value, err := dbconfig.GetConfig(db, "dns_port"); err == nil {
-			if port, err := strconv.Atoi(value); err == nil {
-				return port
-			}
-		}
-	}
-	
-	// Fall back to viper (defaults)
 	return viper.GetInt("dns.port")
 }
 
 func GetHttpPort() int {
-	// Check if flag was explicitly set
-	if viper.IsSet("http.port") && pflag.Lookup("http-port").Changed {
-		return viper.GetInt("http.port")
-	}
-	
-	// Otherwise read from database
-	db, err := dbconfig.InitDB()
-	if err == nil {
-		defer db.Close()
-		if value, err := dbconfig.GetConfig(db, "http_port"); err == nil {
-			if port, err := strconv.Atoi(value); err == nil {
-				return port
-			}
-		}
-	}
-	
-	// Fall back to viper (defaults)
 	return viper.GetInt("http.port")
 }
 
@@ -174,7 +156,7 @@ func GetCacheSize() int {
 			}
 		}
 	}
-	
+
 	// Fall back to viper (defaults)
 	return viper.GetInt("cache.size")
 }
@@ -188,7 +170,7 @@ func GetUpstreamServers() []string {
 			return strings.Split(value, ",")
 		}
 	}
-	
+
 	// Fall back to viper (defaults)
 	serversStr := viper.GetString("upstream.servers")
 	return strings.Split(serversStr, ",")
